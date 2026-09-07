@@ -55,13 +55,13 @@ int Load_OBJ( s_source_t *psource )
 
 	if( !g_quiet )
 	{
-		printf ("grabbing %s\n", psource->filename);
+		Msg ("grabbing %s\n", psource->filename);
 	}
 
 	g_iLinecount = 0;
 
 	psource->numbones = 1;
-	strcpy( psource->localBone[0].name, "default" );
+	V_strcpy_safe( psource->localBone[0].name, "default" );
 	psource->localBone[0].parent = -1;
 
 	psource->numframes = 1;
@@ -169,7 +169,7 @@ int AppendVTAtoOBJ( s_source_t *psource, char *filename, int frame )
 
 	if( !g_quiet )
 	{
-		printf ("grabbing %s\n", filename );
+		Msg ("grabbing %s\n", filename );
 	}
 
 	g_iLinecount = 0;
@@ -187,7 +187,7 @@ int AppendVTAtoOBJ( s_source_t *psource, char *filename, int frame )
 			sscanf( g_szLine, "v %f %f %f", &tmp.x, &tmp.y, &tmp.z );
 			VectorTransform( tmp, m, g_vertex[i] );
 
-			// printf("%f %f %f\n", g_vertex[i].x, g_vertex[i].y, g_vertex[i].z );
+			// Msg("%f %f %f\n", g_vertex[i].x, g_vertex[i].y, g_vertex[i].z );
 
 			g_bone[i].numbones = 1;
 			g_bone[i].bone[0] = 0;
@@ -252,7 +252,7 @@ int AppendVTAtoOBJ( s_source_t *psource, char *filename, int frame )
 	if (frame == 0)
 	{
 		psource->numbones = 1;
-		strcpy( psource->localBone[0].name, "default" );
+		V_strcpy_safe( psource->localBone[0].name, "default" );
 		psource->localBone[0].parent = -1;
 
 		psource->numframes = 1;
@@ -266,7 +266,7 @@ int AppendVTAtoOBJ( s_source_t *psource, char *filename, int frame )
 		BuildIndividualMeshes( psource );
 	}
 
-	// printf("%d %d : %d\n", g_numverts, g_numnormals, numvlist );
+	// Msg("%d %d : %d\n", g_numverts, g_numnormals, numvlist );
 
 	int t = frame;
 	int count = numvlist;

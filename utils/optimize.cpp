@@ -152,7 +152,7 @@ public:
 		int size = 0;
 		for( i = 0; i < m_Strings.Size(); i++ )
 		{
-			if( stricmp( m_Strings[i].Base(), string ) == 0 )
+			if( V_stricmp( m_Strings[i].Base(), string ) == 0 )
 			{
 				return size;
 			}
@@ -165,7 +165,7 @@ public:
 		int i;
 		for( i = 0; i < m_Strings.Size(); i++ )
 		{
-			if( stricmp( m_Strings[i].Base(), string ) == 0 )
+			if( V_stricmp( m_Strings[i].Base(), string ) == 0 )
 			{
 				return true;
 			}
@@ -179,9 +179,9 @@ public:
 			return;
 		}
 		CUtlVector<char> &s = m_Strings[m_Strings.AddToTail()];
-		int size = strlen( newString ) + 1;
+		int size = V_strlen( newString ) + 1;
 		s.AddMultipleToTail( size );
-		strcpy( s.Base(), newString );
+		V_strcpy( s.Base(), newString );
 	}
 	void Purge()
 	{
@@ -203,10 +203,10 @@ public:
 		int i;
 		for( i = 0; i < m_Strings.Size(); i++ )
 		{
-			int j = strlen( m_Strings[i].Base() ) + 1;
+			int j = V_strlen( m_Strings[i].Base() ) + 1;
 			int k = m_Strings[i].Size();
 			assert( j == k );
-			memcpy( pDst + size, m_Strings[i].Base(), m_Strings[i].Size() );
+			V_memcpy( pDst + size, m_Strings[i].Base(), m_Strings[i].Size() );
 			size += m_Strings[i].Size();
 		}
 	}
@@ -482,22 +482,22 @@ void COptimizedModel::CleanupEverything()
 
 void COptimizedModel::OutputMemoryUsage( void )
 {
-	printf( "body parts:   %7d bytes\n", ( int )( m_ModelsOffset - m_BodyPartsOffset ) );
-	printf( "models:       %7d bytes\n", ( int )( m_MeshesOffset - m_ModelsOffset ) );
-	printf( "model LODs:   %7d bytes\n", ( int )( m_MeshesOffset - m_ModelLODsOffset ) );
-	printf( "meshes:       %7d bytes\n", ( int )( m_StripGroupsOffset - m_MeshesOffset ) );
-	printf( "strip groups: %7d bytes\n", ( int )( m_StripsOffset - m_StripGroupsOffset ) );
-	printf( "strips:       %7d bytes\n", ( int )( m_VertsOffset - m_StripsOffset ) );
-	printf( "verts:        %7d bytes\n", ( int )( m_IndicesOffset - m_VertsOffset ) );
-	printf( "indices:      %7d bytes\n", ( int )( m_BoneStageChangesOffset - m_IndicesOffset ) );
-	printf( "bone changes: %7d bytes\n", ( int )( m_EndOfFileOffset - m_BoneStageChangesOffset ) );
-	printf( "everything:   %7d bytes\n", ( int )( m_EndOfFileOffset ) );
+	Msg( "body parts:   %7d bytes\n", ( int )( m_ModelsOffset - m_BodyPartsOffset ) );
+	Msg( "models:       %7d bytes\n", ( int )( m_MeshesOffset - m_ModelsOffset ) );
+	Msg( "model LODs:   %7d bytes\n", ( int )( m_MeshesOffset - m_ModelLODsOffset ) );
+	Msg( "meshes:       %7d bytes\n", ( int )( m_StripGroupsOffset - m_MeshesOffset ) );
+	Msg( "strip groups: %7d bytes\n", ( int )( m_StripsOffset - m_StripGroupsOffset ) );
+	Msg( "strips:       %7d bytes\n", ( int )( m_VertsOffset - m_StripsOffset ) );
+	Msg( "verts:        %7d bytes\n", ( int )( m_IndicesOffset - m_VertsOffset ) );
+	Msg( "indices:      %7d bytes\n", ( int )( m_BoneStageChangesOffset - m_IndicesOffset ) );
+	Msg( "bone changes: %7d bytes\n", ( int )( m_EndOfFileOffset - m_BoneStageChangesOffset ) );
+	Msg( "everything:   %7d bytes\n", ( int )( m_EndOfFileOffset ) );
 }
 
 void COptimizedModel::SanityCheckAgainstStudioHDR( studiohdr_t *phdr )
 {
 #if 0 // garymcthack
-	printf( "SanityCheckAgainstStudioHDR\n" );
+	Msg( "SanityCheckAgainstStudioHDR\n" );
 	FileHeader_t *header = ( FileHeader_t * )m_FileBuffer->GetPointer( 0 );
 	assert( header->numBodyParts == phdr->numbodyparts );
 	for( int bodyPartID = 0; bodyPartID < header->numBodyParts; bodyPartID++ )
@@ -742,11 +742,11 @@ void COptimizedModel::Stripify( VertexIndexList_t const& sourceIndices,
 	}
 
 /*
-	printf( "Stripify\n" );
+	Msg( "Stripify\n" );
 	int i;
 	for( i = 0; i < sourceIndices.Size(); i++ )
 	{
-		printf( "stripindex: %d\n", sourceIndices[i] );
+		Msg( "stripindex: %d\n", sourceIndices[i] );
 	}
 */
 
@@ -764,7 +764,7 @@ void COptimizedModel::Stripify( VertexIndexList_t const& sourceIndices,
 	assert( numPrimGroups == 1 );
 	*pNumIndices = primGroups->numIndices;
 	*ppIndices = new unsigned short[*pNumIndices];
-	memcpy( *ppIndices, primGroups->indices, sizeof( unsigned short ) * *pNumIndices );
+	V_memcpy( *ppIndices, primGroups->indices, sizeof( unsigned short ) * *pNumIndices );
 	delete [] primGroups;
 #endif
 }
@@ -1388,7 +1388,7 @@ void COptimizedModel::ProcessStripGroup( StripGroup_t *pStripGroup, bool isHWSki
 int COptimizedModel::CountUniqueBonesInStrip( StripGroup_t *pStripGroup, Strip_t *pStrip )
 {
 	int *boneUsageCounts = ( int * )_alloca( m_NumBones * sizeof( int ) );
-	memset( boneUsageCounts, 0, sizeof( int ) * m_NumBones );
+	V_memset( boneUsageCounts, 0, sizeof( int ) * m_NumBones );
 	int i;
 	for( i = 0; i < pStrip->numStripGroupVerts; i++ )
 	{
@@ -1557,7 +1557,7 @@ void COptimizedModel::ProcessMesh( Mesh_t *pMesh, studiohdr_t *pStudioHeader,
 	// lists if for some reason they don't get added to the hardware lists
 	TriangleProcessedList_t	trianglesProcessed;
 	trianglesProcessed.AddMultipleToTail( srcFaces.Size() ); 
-	memset( trianglesProcessed.Base(), 0, trianglesProcessed.Size() );
+	V_memset( trianglesProcessed.Base(), 0, trianglesProcessed.Size() );
 	
 	// there are up to 4 stripgroups per mesh
 	// Note that we're gonna do the HW skinned versions first
@@ -1622,13 +1622,13 @@ void COptimizedModel::SetupMeshProcessing( studiohdr_t *pHdr, int vertexCacheSiz
 	
 	if( !g_quiet )
 	{
-		printf( "---------------------\n" );
-		printf( "Generating optimized mesh \"%s\":\n", fileName );
+		Msg( "---------------------\n" );
+		Msg( "Generating optimized mesh \"%s\":\n", fileName );
 #ifdef _DEBUG
-		printf( "\tvertex cache size: %d\n", vertexCacheSize );
-		printf( "\tmax bones/tri:     %d\n", maxBonesPerTri );
-		printf( "\tmax bones/vert:    %d\n", maxBonesPerVert );
-		printf( "\tmax bones/strip:   %d\n", maxBonesPerStrip );
+		Msg( "\tvertex cache size: %d\n", vertexCacheSize );
+		Msg( "\tmax bones/tri:     %d\n", maxBonesPerTri );
+		Msg( "\tmax bones/vert:    %d\n", maxBonesPerVert );
+		Msg( "\tmax bones/strip:   %d\n", maxBonesPerStrip );
 #endif
 	}
 
@@ -1716,8 +1716,8 @@ int COptimizedModel::GetTotalBoneStateChangesForMesh( Mesh_t *pMesh )
 /*
 static void WriteDebugFile( const char *fileName, const char *outFileName, float red, float grn, float blu )
 {
-	char *tmpName = ( char * )_alloca( strlen( fileName ) + 1 );
-	strcpy( tmpName, fileName );
+	char *tmpName = ( char * )_alloca( V_strlen( fileName ) + 1 );
+	V_strcpy_safe( tmpName, fileName );
 	
 	s_source_t *pSrc = Load_Source( tmpName, "SMD" );
 	assert( pSrc );
@@ -1886,23 +1886,23 @@ void COptimizedModel::CreateLODTriangleList( int nLodID, s_source_t* pSrc,
 /*
 	if( writeDebug )
 	{
-		printf( "MODEL VERTS:\n" );
+		Msg( "MODEL VERTS:\n" );
 		int i;
 		for( i = 0; i < pStudioModel->numvertices; i++ )
 		{
 			Vector &v = *pStudioModel->pVertex( i );
 			Vector &n = *pStudioModel->pNormal( i );
 			Vector2D &t = *pStudioModel->pTexcoord( i );
-			printf( "model %d: p %f %f %f n: %f %f %f t: %f %f\n",
+			Msg( "model %d: p %f %f %f n: %f %f %f t: %f %f\n",
 				i, v[0], v[1], v[2], n[0], n[1], n[2], t[0], t[1] );
 		}
-		printf( "MESH VERTS:\n" );
+		Msg( "MESH VERTS:\n" );
 		for( i = 0; i < pStudioMesh->numvertices; i++ )
 		{
 			Vector &v = *pStudioMesh->pVertex( i );
 			Vector &n = *pStudioMesh->pNormal( i );
 			Vector2D &t = *pStudioMesh->pTexcoord( i );
-			printf( "mesh %d: p %f %f %f n: %f %f %f t: %f %f\n",
+			Msg( "mesh %d: p %f %f %f n: %f %f %f t: %f %f\n",
 				i, v[0], v[1], v[2], n[0], n[1], n[2], t[0], t[1] );
 		}
 	}
@@ -1927,7 +1927,7 @@ void COptimizedModel::CreateLODTriangleList( int nLodID, s_source_t* pSrc,
 	}
 	if ( !pSrcMesh )
 	{
-		//printf( "%s doesn't have material %d\n", lodSMDName, textureSearchID );
+		//Msg( "%s doesn't have material %d\n", lodSMDName, textureSearchID );
 		// There aren't any triangles in this lower lod with this material on it.
 		return;
 	}
@@ -1956,7 +1956,7 @@ void COptimizedModel::CreateLODTriangleList( int nLodID, s_source_t* pSrc,
 
 bool ComparePath( const char *a, const char *b )
 {
-	if ( strlen( a ) != strlen( b ) )
+	if ( V_strlen( a ) != V_strlen( b ) )
 	{
 		return false;
 	}
@@ -2009,7 +2009,7 @@ bool COptimizedModel::MeshNeedsRemoval( studiohdr_t *pHdr, mstudiomesh_t *pStudi
 void COptimizedModel::ProcessModel( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyParts, 
 										  TotalMeshStats_t& stats, bool bForceSoftwareSkin, bool bHWFlex )
 {
-	memset( &stats, 0, sizeof(stats) );
+	V_memset( &stats, 0, sizeof(stats) );
 	m_Models.RemoveAll();
 
 	int bodyPartID, modelID, meshID, lodID;
@@ -2058,7 +2058,7 @@ void COptimizedModel::ProcessModel( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyPar
 				for ( meshID = 0; meshID < pStudioModel->nummeshes; meshID++, stats.m_TotalMeshes++ )
 				{
 #ifdef _DEBUG
-//					printf( "bodyPart: %d model: %d modellod: %d mesh: %d\n", bodyPartID, modelID, lodID, meshID );
+//					Msg( "bodyPart: %d model: %d modellod: %d mesh: %d\n", bodyPartID, modelID, lodID, meshID );
 #endif
 					mstudiomesh_t *pStudioMesh = pStudioModel->pMesh( meshID );
 					s_mesh_t *pSrcMesh = &pSrcModel->source->mesh[pSrcModel->source->meshindex[meshID]];
@@ -2154,7 +2154,7 @@ void COptimizedModel::MapGlobalBonesToHardwareBoneIDsAndSortBones( studiohdr_t *
 						}
 						for( int stripID = 0; stripID < pStripGroup->numStrips; stripID++ )
 						{
-							//						printf( "UPDATING BONE STATE\n" );
+							//						Msg( "UPDATING BONE STATE\n" );
 							StripHeader_t *pStrip = pStripGroup->pStrip( stripID );
 							
 							// Generate mapping back and forth between hardware IDs and original bone IDs
@@ -2369,7 +2369,7 @@ void COptimizedModel::WriteBoneStateChange( int boneID, BoneStateChange_t *boneS
 	boneHeader.newBoneID = IsChar( boneStateChange->newBoneID );
 	int boneFileOffset = m_BoneStageChangesOffset + boneID * sizeof( BoneStateChangeHeader_t );
 #if 0
-	printf( "\tboneStateChange: hwid: %d boneID %d\n", ( int )boneHeader.hardwareID, 
+	Msg( "\tboneStateChange: hwid: %d boneID %d\n", ( int )boneHeader.hardwareID, 
 		( int )boneHeader.newBoneID );
 #endif
 	m_FileBuffer->WriteAt( boneFileOffset, &boneHeader, sizeof( BoneStateChangeHeader_t ), "bone" );
@@ -2576,7 +2576,7 @@ void COptimizedModel::WriteVTXFile( studiohdr_t *pHdr, const char *pFileName,
 			Model_t *pModel = &m_Models[curModel + deltaModel];
 			for( int lodID = 0; lodID < g_ScriptLODs.Size(); lodID++ )
 			{
-//				printf( "lod: %d\n", lodID );
+//				Msg( "lod: %d\n", lodID );
 				ModelLOD_t *pLOD = &pModel->modelLODs[lodID];
 				for( int meshID = 0; meshID < pStudioModel->nummeshes; meshID++ )
 				{
@@ -2758,7 +2758,7 @@ void COptimizedModel::PrintBoneStateChanges( studiohdr_t *phdr, int lod )
 							for( int boneStateChangeID = 0; boneStateChangeID < pStrip->numBoneStateChanges; boneStateChangeID++ )
 							{
 								BoneStateChangeHeader_t *pBoneStateChange = pStrip->pBoneStateChange( boneStateChangeID );
-								printf( "bone change: hwid: %d boneid: %d (%s)\n", 
+								Msg( "bone change: hwid: %d boneid: %d (%s)\n", 
 									( int )pBoneStateChange->hardwareID, 
 									( int )pBoneStateChange->newBoneID,
 									g_bonetable[pBoneStateChange->newBoneID].name);
@@ -2895,23 +2895,23 @@ static bool s_Shrunk[3];
 
 void COptimizedModel::PrintVert( Vertex_t *v, mstudiomodel_t *pStudioModel, mstudiomesh_t *pStudioMesh, studiohdr_t *pStudioHdr )
 {
-	printf( "vert:\n" );
+	Msg( "vert:\n" );
 #if 0
-	printf( "\tposition: %f %f %f\n",
+	Msg( "\tposition: %f %f %f\n",
 		v->position[0], v->position[1], v->position[2] );
-	printf( "\tnormal: %f %f %f\n", 
+	Msg( "\tnormal: %f %f %f\n", 
 		v->normal[0], v->normal[1], v->normal[2] );
-	printf( "\ttexcoord: %f %f\n",
+	Msg( "\ttexcoord: %f %f\n",
 		v->texCoord[0], v->texCoord[1] );
 #endif
-	printf( "\torigMeshVertID: %d\n", v->origMeshVertID );
-	printf( "\tnumBones: %d\n", v->numBones );
+	Msg( "\torigMeshVertID: %d\n", v->origMeshVertID );
+	Msg( "\tnumBones: %d\n", v->numBones );
 	int i;
 //	for( i = 0; i < MAX_NUM_BONES_PER_VERT; i++ )
 	for( i = 0; i < v->numBones; i++ )
 	{
 		float boneWeight = GetOrigVertBoneWeightValue( pStudioModel, pStudioMesh, v, i, pStudioHdr );
-		printf( "\tboneID[%d]: %d weight: %f (%s)\n", i, ( int )v->boneID[i], boneWeight, 
+		Msg( "\tboneID[%d]: %d weight: %f (%s)\n", i, ( int )v->boneID[i], boneWeight, 
 		         g_bonetable[v->boneID[i]].name );
 	}
 }
@@ -3147,12 +3147,12 @@ void COptimizedModel::DebugCrap( studiohdr_t *phdr )
 			for( int lodID = 0; lodID < model->numLODs; lodID++ )
 			{
 				char tmp[256];
-				sprintf( tmp, "crap.lod%d", lodID );
-				printf( "writing %s\n", tmp );
+				V_sprintf_safe( tmp, "crap.lod%d", lodID );
+				Msg( "writing %s\n", tmp );
 				FILE *fp = fopen( tmp, "w" );
 				if( !fp )
 				{
-					printf( "can't write crap file %s\n", tmp );
+					Msg( "can't write crap file %s\n", tmp );
 					return;
 				}
 				
@@ -3211,12 +3211,12 @@ void COptimizedModel::WriteGLViewFile( studiohdr_t *phdr, const char *pFileName,
 			for( int lodID = 0; lodID < model->numLODs; lodID++ )
 			{
 				char tmp[256];
-				sprintf( tmp, "%s.lod%d", pFileName, lodID );
-				printf( "writing %s\n", tmp );
+				V_sprintf_safe( tmp, "%s.lod%d", pFileName, lodID );
+				Msg( "writing %s\n", tmp );
 				FILE *fp = fopen( tmp, "w" );
 				if( !fp )
 				{
-					printf( "can't write glview file %s\n", tmp );
+					Msg( "can't write glview file %s\n", tmp );
 					return;
 				}
 
@@ -3359,35 +3359,35 @@ void COptimizedModel::WriteGLViewFiles( studiohdr_t *pHdr, char const* glViewFil
 		return;
 
 	char tmpFileName[128];
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".mesh" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".mesh" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWMESH, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".stripgroup" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".stripgroup" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSTRIPGROUP, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".strip" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".strip" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSTRIP, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".substrip" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".substrip" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSUBSTRIP, .97f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".flexed" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".flexed" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWFLEXED, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".sw" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".sw" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSW, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".flexedandsw" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".flexedandsw" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSW | WRITEGLVIEW_SHOWFLEXED, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".meshprops" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".meshprops" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWMESHPROPS, .8f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".vertnumbones" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".vertnumbones" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWVERTNUMBONES, 1.0f );
-	strcpy( tmpFileName, glViewFileName );
-	strcat( tmpFileName, ".stripnumbones" );
+	V_strcpy_safe( tmpFileName, glViewFileName );
+	V_strcat_safe( tmpFileName, ".stripnumbones" );
 	WriteGLViewFile( pHdr, tmpFileName, WRITEGLVIEW_SHOWSTRIPNUMBONES, 1.0f );
 }
 
@@ -3453,23 +3453,23 @@ void COptimizedModel::ShowStats( void )
 	hardwareVertexCache.Init( m_VertexCacheSize - CACHE_INEFFICIENCY );
 	
 	FileHeader_t *header = ( FileHeader_t * )m_FileBuffer->GetPointer( 0 );
-	printf( "header: %d body parts\n", header->numBodyParts );
+	Msg( "header: %d body parts\n", header->numBodyParts );
 	for( int bodyPartID = 0; bodyPartID < header->numBodyParts; bodyPartID++ )
 	{
 		BodyPartHeader_t *bodyPart = header->pBodyPart( bodyPartID );
-		printf( "  bodyPart %d: %d models\n", bodyPartID, bodyPart->numModels );
+		Msg( "  bodyPart %d: %d models\n", bodyPartID, bodyPart->numModels );
 		for( int modelID = 0; modelID < bodyPart->numModels; modelID++ )
 		{
 			ModelHeader_t *model = bodyPart->pModel( modelID );
-			printf( "    model: %d lods\n", model->numLODs );
+			Msg( "    model: %d lods\n", model->numLODs );
 			for( int lodID = 0; lodID < 1; lodID++ )
 			{
 				ModelLODHeader_t *pLOD = model->pLOD( lodID );
-				printf( "     lod: %d meshes\n", pLOD->numMeshes );
+				Msg( "     lod: %d meshes\n", pLOD->numMeshes );
 				for( int meshID = 0; meshID < pLOD->numMeshes; meshID++ )
 				{
 					MeshHeader_t *mesh = pLOD->pMesh( meshID );
-					printf( "       mesh %d: %d stripsgroups\n", meshID, mesh->numStripGroups );
+					Msg( "       mesh %d: %d stripsgroups\n", meshID, mesh->numStripGroups );
 					for( int stripGroupID = 0; stripGroupID < mesh->numStripGroups; stripGroupID++ )
 					{
 						StripGroupHeader_t *pStripGroup = mesh->pStripGroup( stripGroupID );
@@ -3480,7 +3480,7 @@ void COptimizedModel::ShowStats( void )
 								int lastThreeIndices[3];
 								
 								StripHeader_t *pStrip = pStripGroup->pStrip( stripID );
-								printf( "         strip: %d numIndices: %d indexOffset: %d\n", stripID, pStrip->numIndices, pStrip->indexOffset );
+								Msg( "         strip: %d numIndices: %d indexOffset: %d\n", stripID, pStrip->numIndices, pStrip->indexOffset );
 								
 								hardwareVertexCache.Flush();
 								if( pStrip->flags & STRIP_IS_TRISTRIP )
@@ -3522,7 +3522,7 @@ void COptimizedModel::ShowStats( void )
 									{
 										int newVertOffset = indexID % 3;
 										int index = *pStripGroup->pIndex( indexID + pStrip->indexOffset );
-//										printf( "%d\n", index );
+//										Msg( "%d\n", index );
 										lastThreeIndices[newVertOffset] = index;
 										if( newVertOffset == 2 )
 										{
@@ -3530,7 +3530,7 @@ void COptimizedModel::ShowStats( void )
 												lastThreeIndices[1] == lastThreeIndices[2] ||
 												lastThreeIndices[0] == lastThreeIndices[2] )
 											{
-//												printf( "degenerate triangle!!!! %d %d %d\n", lastThreeIndices[0], lastThreeIndices[1], lastThreeIndices[2] );
+//												Msg( "degenerate triangle!!!! %d %d %d\n", lastThreeIndices[0], lastThreeIndices[1], lastThreeIndices[2] );
 												totalHWDegenerates++;
 											}
 										}
@@ -3555,23 +3555,23 @@ void COptimizedModel::ShowStats( void )
 	}
 	int totalRealHWTriangles = totalHWTriangles - totalHWDegenerates;
 	int totalRealSWTriangles = totalSWTriangles - totalSWDegenerates;
-	printf( "TotalHWTriangles: %d\n", totalHWTriangles );
-	printf( "TotalHWDegenerates: %d\n", totalHWDegenerates );
-	printf( "TotalRealHWTriangles: %d\n", totalRealHWTriangles );
-	printf( "TotalHWIndices: %d\n", totalHWIndices );
-	printf( "HW real tris/index: %f\n", ( float )totalRealHWTriangles / ( float )totalHWIndices );
-	printf( "totalHWVertexCacheHits: %d\n", totalHWVertexCacheHits );
-	printf( "totalHWVertexCacheMisses: %d\n", totalHWVertexCacheMisses );
-	printf( "HW vertex cache hit/miss ratio: %f\n", ( float )totalHWVertexCacheHits / ( float )totalHWVertexCacheMisses );
+	Msg( "TotalHWTriangles: %d\n", totalHWTriangles );
+	Msg( "TotalHWDegenerates: %d\n", totalHWDegenerates );
+	Msg( "TotalRealHWTriangles: %d\n", totalRealHWTriangles );
+	Msg( "TotalHWIndices: %d\n", totalHWIndices );
+	Msg( "HW real tris/index: %f\n", ( float )totalRealHWTriangles / ( float )totalHWIndices );
+	Msg( "totalHWVertexCacheHits: %d\n", totalHWVertexCacheHits );
+	Msg( "totalHWVertexCacheMisses: %d\n", totalHWVertexCacheMisses );
+	Msg( "HW vertex cache hit/miss ratio: %f\n", ( float )totalHWVertexCacheHits / ( float )totalHWVertexCacheMisses );
 
-	printf( "TotalSWTriangles: %d\n", totalSWTriangles );
-	printf( "TotalSWDegenerates: %d\n", totalSWDegenerates );
-	printf( "TotalRealSWTriangles: %d\n", totalRealSWTriangles );
-	printf( "TotalSWIndices: %d\n", totalSWIndices );
-	printf( "SW real tris/index: %f\n", ( float )totalRealSWTriangles / ( float )totalSWIndices );
-	printf( "totalSWVertexCacheHits: %d\n", totalSWVertexCacheHits );
-	printf( "totalSWVertexCacheMisses: %d\n", totalSWVertexCacheMisses );
-	printf( "SW vertex cache hit/miss ratio: %f\n", ( float )totalSWVertexCacheHits / ( float )totalSWVertexCacheMisses );
+	Msg( "TotalSWTriangles: %d\n", totalSWTriangles );
+	Msg( "TotalSWDegenerates: %d\n", totalSWDegenerates );
+	Msg( "TotalRealSWTriangles: %d\n", totalRealSWTriangles );
+	Msg( "TotalSWIndices: %d\n", totalSWIndices );
+	Msg( "SW real tris/index: %f\n", ( float )totalRealSWTriangles / ( float )totalSWIndices );
+	Msg( "totalSWVertexCacheHits: %d\n", totalSWVertexCacheHits );
+	Msg( "totalSWVertexCacheMisses: %d\n", totalSWVertexCacheMisses );
+	Msg( "SW vertex cache hit/miss ratio: %f\n", ( float )totalSWVertexCacheHits / ( float )totalSWVertexCacheMisses );
 }
 
 void COptimizedModel::CheckVert( Vertex_t *pVert, int maxBonesPerTri, int maxBonesPerVert )
@@ -3645,7 +3645,7 @@ void COptimizedModel::SortBonesWithinVertex( bool flexed, Vertex_t *vert, mstudi
 		{
 			if( flexed )
 			{
-				printf( "global bone id: %d hardware bone id: %d\n",
+				Msg( "global bone id: %d hardware bone id: %d\n",
 					i, globalToHardwareBoneIndex[i] );
 			}
 		}
@@ -3700,8 +3700,8 @@ void COptimizedModel::SortBonesWithinVertex( bool flexed, Vertex_t *vert, mstudi
 		{
 			if( flexed )
 			{
-				printf( "boneWeight: %f\n", boneWeight );
-				printf( "globalBoneIndex: %d\n", globalBoneIndex );
+				Msg( "boneWeight: %f\n", boneWeight );
+				Msg( "globalBoneIndex: %d\n", globalBoneIndex );
 			}
 		}
 		if( boneWeight > 0.0f )
@@ -3728,9 +3728,9 @@ void COptimizedModel::SortBonesWithinVertex( bool flexed, Vertex_t *vert, mstudi
 		if( flexed )
 		{
 			assert( boneWeight >= 0.0f && boneWeight <= 1.0f );
-			printf( "boneWeight: %f ", boneWeight );
-			printf( "globalBoneIndex: %d ", globalBoneIndex );
-			printf( "hardwareBoneID: %d\n", i );
+			Msg( "boneWeight: %f ", boneWeight );
+			Msg( "globalBoneIndex: %d ", globalBoneIndex );
+			Msg( "hardwareBoneID: %d\n", i );
 		}
 	}
 	vert->numBones = maxBonesPerTri; // this may be different for software t&l stuff
@@ -3749,7 +3749,7 @@ void COptimizedModel::RemoveRedundantBoneStateChanges( void )
 		bool changed[MAX_NUM_BONES_PER_STRIP];
 		
 		// start anew with each body part
-//		printf( "START BODY PARTY - RESETTING BONE MATRIX STATE\n" );
+//		Msg( "START BODY PARTY - RESETTING BONE MATRIX STATE\n" );
 		int i;
 		for( i = 0; i < MAX_NUM_BONES_PER_STRIP; i++ )
 		{
@@ -3771,7 +3771,7 @@ void COptimizedModel::RemoveRedundantBoneStateChanges( void )
 						StripGroupHeader_t *pStripGroup = mesh->pStripGroup( stripGroupID );
 						if( !( pStripGroup->flags & STRIPGROUP_IS_HWSKINNED ) )
 						{
-//							printf( "skipping! software skinned stripgroup\n" );
+//							Msg( "skipping! software skinned stripgroup\n" );
 							continue;
 						}
 						for( int stripID = 0; stripID < pStripGroup->numStrips; stripID++ )
@@ -3779,19 +3779,19 @@ void COptimizedModel::RemoveRedundantBoneStateChanges( void )
 							StripHeader_t *pStrip = pStripGroup->pStrip( stripID );
 							int startNumBoneChanges = pStrip->numBoneStateChanges;
 /*
-							printf( "HARDWARE BONE STATE\n" );
+							Msg( "HARDWARE BONE STATE\n" );
 							for( i = 0; i < MAX_NUM_BONES_PER_STRIP; i++ )
 							{
 								if( allocated[i] )
 								{
-									printf( "\thw: %d global: %d\n", i, hardwareBoneState[i] );
+									Msg( "\thw: %d global: %d\n", i, hardwareBoneState[i] );
 								}
 							}
 							
-							printf( "before optimization\n" );
+							Msg( "before optimization\n" );
 							for( i = 0; i < pStrip->numBoneStateChanges; i++ )
 							{
-								printf( "\thw: %d global: %d\n", 
+								Msg( "\thw: %d global: %d\n", 
 									( int )pStrip->pBoneStateChange( i )->hardwareID,
 									( int )pStrip->pBoneStateChange( i )->newBoneID );
 							}
@@ -3832,11 +3832,11 @@ void COptimizedModel::RemoveRedundantBoneStateChanges( void )
 								}
 							}
 							pStrip->numBoneStateChanges = curOutBoneID;
-							printf( "start bone changes: %d end bone changes: %d\n", startNumBoneChanges, pStrip->numBoneStateChanges );
-							printf( "after optimization\n" );
+							Msg( "start bone changes: %d end bone changes: %d\n", startNumBoneChanges, pStrip->numBoneStateChanges );
+							Msg( "after optimization\n" );
 							for( i = 0; i < pStrip->numBoneStateChanges; i++ )
 							{
-								printf( "\thw: %d global: %d\n", 
+								Msg( "\thw: %d global: %d\n", 
 										( int )pStrip->pBoneStateChange( i )->hardwareID,
 										( int )pStrip->pBoneStateChange( i )->newBoneID );
 							}
@@ -3920,23 +3920,23 @@ void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts )
 	// hack!  This should really go in the mdl file since it's common to all LODs.
 	AddMaterialReplacementsToStringTable();
 	
-	strcpy( filename, gamedir );
+	V_strcpy_safe( filename, gamedir );
 //	if( *g_pPlatformName )
 //	{
-//		strcat( filename, "platform_" );
-//		strcat( filename, g_pPlatformName );
-//		strcat( filename, "/" );	
+//		V_strcat_safe( filename, "platform_" );
+//		V_strcat_safe( filename, g_pPlatformName );
+//		V_strcat_safe( filename, "/" );	
 //	}
-	strcat( filename, "models/" );	
-	strcat( filename, outname );
-	Q_StripExtension( filename, filename, sizeof( filename ) );
+	V_strcat_safe( filename, "models/" );	
+	V_strcat_safe( filename, outname );
+	V_StripExtension( filename, filename, sizeof( filename ) );
 
 	// if ( !g_bXbox )
 	{
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, ".sw.vtx" );
-		strcpy( glViewFilename, filename );
-		strcat( glViewFilename, ".sw.glview" );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, ".sw.vtx" );
+		V_strcpy_safe( glViewFilename, filename );
+		V_strcat_safe( glViewFilename, ".sw.glview" );
 		bool bForceSoftwareSkinning = phdr->numbones > 0 && !g_staticprop;
 		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
 												512,	//vert cache size FIXME: figure out the correct size for L1
@@ -3948,10 +3948,10 @@ void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts )
 												512,	// bones/strip
 												tmpFileName, glViewFilename );
 
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, ".dx80.vtx" );
-		strcpy( glViewFilename, filename );
-		strcat( glViewFilename, ".dx80.glview" );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, ".dx80.vtx" );
+		V_strcpy_safe( glViewFilename, filename );
+		V_strcat_safe( glViewFilename, ".dx80.glview" );
 		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
 												24 /* vert cache size (real size, not effective!)*/, 
 												false, /* doesn't use fixed function */
@@ -3962,10 +3962,10 @@ void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts )
 												16  /* bones/strip */,
 												tmpFileName, glViewFilename );
 
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, ".dx90.vtx" );
-		strcpy( glViewFilename, filename );
-		strcat( glViewFilename, ".dx90.glview" );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, ".dx90.vtx" );
+		V_strcpy_safe( glViewFilename, filename );
+		V_strcat_safe( glViewFilename, ".dx90.glview" );
 		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
 												24 /* vert cache size (real size, not effective!)*/, 
 												false, /* doesn't use fixed function */
@@ -3978,10 +3978,10 @@ void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts )
 	}
 	// else
 	{
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, ".xbox.vtx" );
-		strcpy( glViewFilename, filename );
-		strcat( glViewFilename, ".xbox.glview" );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, ".xbox.vtx" );
+		V_strcpy_safe( glViewFilename, filename );
+		V_strcat_safe( glViewFilename, ".xbox.glview" );
 		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
 												24 /* vert cache size (real size, not effective!)*/, 
 												false, /* doesn't use fixed function */

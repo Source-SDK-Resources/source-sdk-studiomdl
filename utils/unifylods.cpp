@@ -32,9 +32,9 @@ class CVertexDictionary;
 struct VertexInfo_t;
 
 void ValidateBoneWeights( const s_source_t *pSrc );
-void ValidateBoneWeight( const s_boneweight_t &boneWeight );
-void SortBoneWeightByIndex( s_boneweight_t &boneWeight );
-int FindVertexInDictionaryExact( CVertexDictionary &vertexDict, int nStartVert, int nEndVert, const VertexInfo_t &vertex );
+static void ValidateBoneWeight( const s_boneweight_t &boneWeight );
+static void SortBoneWeightByIndex( s_boneweight_t &boneWeight );
+static int FindVertexInDictionaryExact( CVertexDictionary &vertexDict, int nStartVert, int nEndVert, const VertexInfo_t &vertex );
 static void BuildBoneLODMapping( CUtlVector<int> &boneMap, int lodID );
 
 
@@ -199,10 +199,10 @@ s_source_t* GetModelLODSource( const char *pModelName,
 								const LodScriptData_t& scriptLOD, bool* pFound )
 {
 	// When doing LOD replacement, ignore all path + extension information
-	char* pTempBuf = (char*)_alloca( strlen(pModelName) + 1 );
+	char* pTempBuf = (char*)_alloca( V_strlen(pModelName) + 1 );
 
 	// Strip off extensions for the source...
-	strcpy( pTempBuf, pModelName ); 
+	V_strcpy( pTempBuf, pModelName ); 
 	char* pDot = strrchr( pTempBuf, '.' );
 	if (pDot)
 		*pDot = 0;
@@ -217,7 +217,7 @@ s_source_t* GetModelLODSource( const char *pModelName,
 //		if (!pSlash)
 //			pSlash = pTempBuf1;
 
-		if( !stricmp( pTempBuf, scriptLOD.modelReplacements[i].GetSrcName() ) )
+		if( !V_stricmp( pTempBuf, scriptLOD.modelReplacements[i].GetSrcName() ) )
 		{
 			*pFound = true;
 			return scriptLOD.modelReplacements[i].m_pSource;
@@ -389,13 +389,13 @@ bool CompareBoneWeightsFuzzy( const s_boneweight_t &b1, const s_boneweight_t &b2
 int FindMaterialByName( const char *pMaterialName )
 {
 	int i;
-	int allocLen = strlen( pMaterialName ) + 1;
+	std::size_t allocLen = V_strlen( pMaterialName ) + 1;
 	char *pBaseName = ( char * )_alloca( allocLen );
-	Q_FileBase( ( char * )pMaterialName, pBaseName, allocLen );
+	V_FileBase( ( char * )pMaterialName, pBaseName, (int)allocLen );
 
 	for( i = 0; i < g_numtextures; i++ )
 	{
-		if( stricmp( pBaseName, g_texture[i].name ) == 0 )
+		if( V_stricmp( pBaseName, g_texture[i].name ) == 0 )
 		{
 			return i;
 		}
@@ -454,13 +454,13 @@ static s_mesh_t *FindOrCullMesh( int nLodID, s_source_t *pSrc, int nMaterialID )
 		MdlError( "Unknown Texture for Material %d\n", nMaterialID );
 	}
 
-	Q_FileBase(g_texture[nTextureID].name, baseMeshName, sizeof(baseMeshName)-1);
+	V_FileBase(g_texture[nTextureID].name, baseMeshName, sizeof(baseMeshName)-1);
 	for ( int i = 0; i < g_ScriptLODs[nLodID].meshRemovals.Count(); i++ )
 	{
 		const char *pMeshRemovalName = g_ScriptLODs[nLodID].meshRemovals[i].GetSrcName();
-		Q_FileBase( pMeshRemovalName, baseRemovalName, sizeof(baseRemovalName)-1);
+		V_FileBase( pMeshRemovalName, baseRemovalName, sizeof(baseRemovalName)-1);
 
-		if (!stricmp( baseRemovalName, baseMeshName ))
+		if (!V_stricmp( baseRemovalName, baseMeshName ))
 		{
 			// mesh has been marked for removal
 			return NULL;
@@ -506,16 +506,12 @@ void ValidateBoneWeights( const s_source_t *pSrc )
 	int i;
 	for( i = 0; i < pSrc->numvertices; i++ )
 	{
-		Vector &pos = pSrc->vertex[i].position;
-		Vector &norm = pSrc->vertex[i].normal;
-		Vector2D &texcoord = pSrc->vertex[i].texcoord;
 		s_boneweight_t *pBoneWeight = &pSrc->vertex[i].globalBoneweight;
 		int j;
 		for( j = 0; j < pBoneWeight->numbones; j++ )
 		{
 			int globalBoneID;
 			globalBoneID = pBoneWeight->bone[j];
-			const char *pBoneName = g_bonetable[globalBoneID].name;
 			ValidateBoneWeight( *pBoneWeight );
 		}
 	}
@@ -769,7 +765,7 @@ static void FindBoneWeightWithinModel( const VertexInfo_t &searchVertex, const s
 		MdlError( "Encountered a mesh with no vertices!\n" );
 	}
 
-	memcpy( &boneWeight, &pSrc->vertex[ nBestIndex ].globalBoneweight, sizeof(s_boneweight_t) );
+	V_memcpy( &boneWeight, &pSrc->vertex[ nBestIndex ].globalBoneweight, sizeof(s_boneweight_t) );
 }
 
 
@@ -953,7 +949,6 @@ static bool FuzzyFloatCompare( float f1, float f2, float epsilon )
 //-----------------------------------------------------------------------------
 static bool IsBoneWeightSortedByBone( const s_boneweight_t &src )
 {
-	int nLastBone = -1;
 	for ( int i = 1; i < src.numbones; ++i )
 	{
 		Assert( src.bone[i] != -1 );
@@ -1060,14 +1055,14 @@ static int FindOrCreateExactVertexInDictionary( CVertexDictionary &vertexDict,
 
 static void PrintBonesUsedInLOD( s_source_t *pSrc )
 {
-	printf( "PrintBonesUsedInLOD\n" );
+	Msg( "PrintBonesUsedInLOD\n" );
 	int i;
 	for( i = 0; i < pSrc->numvertices; i++ )
 	{
 		Vector &pos = pSrc->vertex[i].position;
 		Vector &norm = pSrc->vertex[i].normal;
 		Vector2D &texcoord = pSrc->vertex[i].texcoord;
-		printf( "pos: %f %f %f norm: %f %f %f texcoord: %f %f\n",
+		Msg( "pos: %f %f %f norm: %f %f %f texcoord: %f %f\n",
 			pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], texcoord[0], texcoord[1] );
 		s_boneweight_t *pBoneWeight = &pSrc->vertex[i].globalBoneweight;
 		int j;
@@ -1075,10 +1070,10 @@ static void PrintBonesUsedInLOD( s_source_t *pSrc )
 		{
 			int globalBoneID = pBoneWeight->bone[j];
 			const char *pBoneName = g_bonetable[globalBoneID].name;
-			printf( "vert: %d bone: %d boneid: %d weight: %f name: \"%s\"\n", i, ( int )j, ( int )pBoneWeight->bone[j], 
+			Msg( "vert: %d bone: %d boneid: %d weight: %f name: \"%s\"\n", i, ( int )j, ( int )pBoneWeight->bone[j], 
 				( float )pBoneWeight->weight[j], pBoneName );
 		}
-		printf( "\n" );
+		Msg( "\n" );
 		fflush( stdout );
 	}
 }
@@ -1106,7 +1101,7 @@ static void PrintSBoneWeight( s_boneweight_t *pBoneWeight, const s_source_t *pSr
 		int globalBoneID;
 		globalBoneID = pBoneWeight->bone[j];
 		const char *pBoneName = g_bonetable[globalBoneID].name;
-		printf( "bone: %d boneid: %d weight: %f name: \"%s\"\n", ( int )j, ( int )pBoneWeight->bone[j], 
+		Msg( "bone: %d boneid: %d weight: %f name: \"%s\"\n", ( int )j, ( int )pBoneWeight->bone[j], 
 			( float )pBoneWeight->weight[j], pBoneName );
 	}
 }
@@ -1146,7 +1141,7 @@ static void CreateLODVertsInDictionary( int nLodID, const s_source_t *pRootLODSr
 		vertex.m_TangentS   = pCurrentLODSrc->vertex[nSrcID].tangentS;
 
 #ifdef _DEBUG
-		memset( &vertex.m_BoneWeight, 0xDD, sizeof( s_boneweight_t ) );
+		V_memset( &vertex.m_BoneWeight, 0xDD, sizeof( s_boneweight_t ) );
 #endif
 		// determine the best bone weight for the desired vertex within the root lod only
 		// the root lod contains no bone remappings
@@ -1180,7 +1175,7 @@ static void CreateLODVertsInDictionary( int nLodID, const s_source_t *pRootLODSr
 	int nNewVertsCreated = vertexDict.VertexCount() - nNumCurrentVerts;
 	if (!g_quiet && nNewVertsCreated)
 	{
-		printf( "Lod %d: vertexes: %d (%d new)\n", nLodID, vertexDict.VertexCount(), nNewVertsCreated);
+		Msg( "Lod %d: vertexes: %d (%d new)\n", nLodID, vertexDict.VertexCount(), nNewVertsCreated);
 	}
 }
 
@@ -1189,14 +1184,14 @@ static void PrintSourceVerts( s_source_t *pSrc )
 	int i;
 	for( i = 0; i < pSrc->numvertices; i++ )
 	{
-		printf( "v %d ", i );
-		printf( "pos: %f %f %f ", pSrc->vertex[i].position[0], pSrc->vertex[i].position[1], pSrc->vertex[i].position[2] );
-		printf( "norm: %f %f %f ", pSrc->vertex[i].normal[0], pSrc->vertex[i].normal[1], pSrc->vertex[i].normal[2] );
-		printf( "texcoord: %f %f\n", pSrc->vertex[i].texcoord[0], pSrc->vertex[i].texcoord[1] );
+		Msg( "v %d ", i );
+		Msg( "pos: %f %f %f ", pSrc->vertex[i].position[0], pSrc->vertex[i].position[1], pSrc->vertex[i].position[2] );
+		Msg( "norm: %f %f %f ", pSrc->vertex[i].normal[0], pSrc->vertex[i].normal[1], pSrc->vertex[i].normal[2] );
+		Msg( "texcoord: %f %f\n", pSrc->vertex[i].texcoord[0], pSrc->vertex[i].texcoord[1] );
 		int j;
 		for( j = 0; j < pSrc->vertex[i].globalBoneweight.numbones; j++ )
 		{
-			printf( "\t%d: %d %f\n", j, ( int )pSrc->vertex[i].globalBoneweight.bone[j], 
+			Msg( "\t%d: %d %f\n", j, ( int )pSrc->vertex[i].globalBoneweight.bone[j], 
 				pSrc->vertex[i].globalBoneweight.weight[j] );
 		}
 		fflush( stdout );
@@ -1214,10 +1209,9 @@ static void SetProcessedWithDictionary( CUtlVector<s_source_t*> &lods, CVertexDi
 {
 	int	i;
 	int nNumLODs = lods.Count();
-	s_source_t *pRootLodSrc = lods[0];
 
 	s_loddata_t *pLodData = new s_loddata_t;
-	memset(pLodData, 0, sizeof(s_loddata_t));
+	V_memset(pLodData, 0, sizeof(s_loddata_t));
 	
 	// all lods have link to processed data
 	for (i=0; i<nNumLODs; i++)
@@ -1243,8 +1237,8 @@ static void SetProcessedWithDictionary( CUtlVector<s_source_t*> &lods, CVertexDi
 		pLodData->vertex[i].bLoD		= vertexDict.Vertex( i ).m_bLoD;
 	}
 
-	memcpy( pLodData->face, faces.Base(), faces.Count() * sizeof( s_face_t ) );
-	memcpy( pLodData->mesh, meshes.Base(), meshes.Count() * sizeof( s_mesh_t ) );
+	V_memcpy( pLodData->face, faces.Base(), faces.Count() * sizeof( s_face_t ) );
+	V_memcpy( pLodData->mesh, meshes.Base(), meshes.Count() * sizeof( s_mesh_t ) );
 
 	for (i=0; i<MAX_NUM_LODS; i++)
 	{
@@ -1331,7 +1325,7 @@ static void UnifyModelLODs( s_model_t *pSrcModel )
 	int nNumLODs = g_ScriptLODs.Count();
 	lods.AddMultipleToTail( nNumLODs );
 	
-	if( Q_stricmp( pSrcModel->name, "blank" ) == 0 )
+	if( V_stricmp( pSrcModel->name, "blank" ) == 0 )
 		return;
 	
 	// lod source are not gauranteed to be unique
@@ -1348,7 +1342,7 @@ static void UnifyModelLODs( s_model_t *pSrcModel )
 		{
 			pMeshVertIndexMaps[nLodID] = new int[lods[nLodID]->numvertices];
 #ifdef _DEBUG
-			memset( pMeshVertIndexMaps[nLodID], 0xDD, lods[nLodID]->numvertices * sizeof(int) );
+			V_memset( pMeshVertIndexMaps[nLodID], 0xDD, lods[nLodID]->numvertices * sizeof(int) );
 #endif
 		}
 		else
@@ -1364,7 +1358,7 @@ static void UnifyModelLODs( s_model_t *pSrcModel )
 	
 	meshes.AddMultipleToTail( MAXSTUDIOSKINS );
 	Assert( meshes.Count() == MAXSTUDIOSKINS );
-	memset( meshes.Base(), 0, meshes.Count() * sizeof( s_mesh_t ) );
+	V_memset( meshes.Base(), 0, meshes.Count() * sizeof( s_mesh_t ) );
 
 	int nMeshID;
 	for( nMeshID = 0; nMeshID < pSrcModel->source->nummeshes; nMeshID++ )
@@ -1447,7 +1441,7 @@ static void PrintSpaces( int numSpaces )
 	int i;
 	for( i = 0; i < numSpaces; i++ )
 	{
-		printf( " " );
+		Msg( " " );
 	}
 }
 
@@ -1457,7 +1451,7 @@ static void SpewBoneInfo( int globalBoneID, int depth )
 	if( g_bPrintBones )
 	{
 		PrintSpaces( depth * 2 );
-		printf( "%d \"%s\" ", depth, pBone->name );
+		Msg( "%d \"%s\" ", depth, pBone->name );
 	}
 	int i;
 	for( i = 0; i < 8; i++ )
@@ -1466,14 +1460,14 @@ static void SpewBoneInfo( int globalBoneID, int depth )
 		{
 			if( g_bPrintBones )
 			{
-				printf( "lod%d ", i );
+				Msg( "lod%d ", i );
 			}
 			g_NumBonesInLOD[i]++;
 		}
 	}
 	if( g_bPrintBones )
 	{
-		printf( "\n" );	
+		Msg( "\n" );	
 	}
 	
 	int j;
@@ -1489,7 +1483,7 @@ static void SpewBoneInfo( int globalBoneID, int depth )
 
 void SpewBoneUsageStats( void )
 {
-	memset( g_NumBonesInLOD, 0, sizeof( int ) * MAX_NUM_LODS );
+	V_memset( g_NumBonesInLOD, 0, sizeof( int ) * MAX_NUM_LODS );
 	if( g_numbones == 0 )
 	{
 		return;
@@ -1500,7 +1494,7 @@ void SpewBoneUsageStats( void )
 		int i;
 		for( i = 0; i < g_ScriptLODs.Count(); i++ )
 		{
-			printf( "\t%d bones used in lod %d\n", g_NumBonesInLOD[i], i );
+			Msg( "\t%d bones used in lod %d\n", g_NumBonesInLOD[i], i );
 		}
 	}
 }
@@ -1527,7 +1521,7 @@ static void LoadModelLODSource( s_model_t *pSrcModel )
 	int numLODs = g_ScriptLODs.Size();
 	lods.AddMultipleToTail( numLODs );
 	
-	if( stricmp( pSrcModel->name, "blank" ) == 0 )
+	if( V_stricmp( pSrcModel->name, "blank" ) == 0 )
 	{
 		return;
 	}
@@ -1600,7 +1594,7 @@ static void PrintReplacedBones( LodScriptData_t &lod )
 	int i;
 	for( i = 0; i < lod.boneReplacements.Count(); i++ )
 	{
-		printf( "%s -> %s\n", 
+		Msg( "%s -> %s\n", 
 			lod.boneReplacements[i].GetSrcName(), 
 			lod.boneReplacements[i].GetDstName() );
 	}
@@ -1610,7 +1604,7 @@ static void PrintReplacedBones( LodScriptData_t &lod )
 void FixupReplacedBonesForLOD( LodScriptData_t &lod )
 {
 /*
-	printf( "before:\n" );
+	Msg( "before:\n" );
 	PrintReplacedBones( lod );
 */
 	bool changed;
@@ -1627,7 +1621,7 @@ void FixupReplacedBonesForLOD( LodScriptData_t &lod )
 				{
 					continue;
 				}
-				if( Q_stricmp( lod.boneReplacements[i].GetSrcName(), lod.boneReplacements[j].GetDstName() ) == 0 )
+				if( V_stricmp( lod.boneReplacements[i].GetSrcName(), lod.boneReplacements[j].GetDstName() ) == 0 )
 				{
 					lod.boneReplacements[j].SetDstName( lod.boneReplacements[i].GetDstName() );
 					changed = true;
@@ -1636,7 +1630,7 @@ void FixupReplacedBonesForLOD( LodScriptData_t &lod )
 		}
 	} while( changed );
 /*
-	printf( "after:\n" );
+	Msg( "after:\n" );
 	PrintReplacedBones( lod );
 */
 }

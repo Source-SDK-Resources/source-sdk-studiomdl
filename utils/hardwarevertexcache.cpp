@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "hardwarevertexcache.h"
+#include <dbg.h>
 
 CHardwareVertexCache::CHardwareVertexCache()
 {
@@ -32,23 +33,23 @@ void CHardwareVertexCache::Flush( void )
 bool CHardwareVertexCache::IsPresent( int index )
 {
 	int i;
-//	printf( "testing if %d is present\n", index );
+//	Msg( "testing if %d is present\n", index );
 	for( i = 0; i < m_NumEntries; i++ )
 	{
 		if( m_Fifo[( m_HeadIndex + i ) % m_Size] == index )
 		{
-//			printf( "yes!\n" );
+//			Msg( "yes!\n" );
 			return true;
 		}
 	}
-//	printf( "no!\n" );
+//	Msg( "no!\n" );
 //	Print();
 	return false;
 }
 
 void CHardwareVertexCache::Insert( int index )
 {
-//	printf( "Inserting: %d\n", index );
+//	Msg( "Inserting: %d\n", index );
 	m_Fifo[( m_HeadIndex + m_NumEntries ) % m_Size] = index;
 	if( m_NumEntries == m_Size )
 	{
@@ -66,6 +67,6 @@ void CHardwareVertexCache::Print( void )
 	int i;
 	for( i = 0; i < m_NumEntries; i++ )
 	{
-		printf( "fifo entry %d: %d\n", i, ( int )m_Fifo[( m_HeadIndex + i ) % m_Size] );
+		Msg( "fifo entry %d: %d\n", i, ( int )m_Fifo[( m_HeadIndex + i ) % m_Size] );
 	}
 }

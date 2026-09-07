@@ -79,7 +79,7 @@ void ParseFaceData( s_source_t *psource, int material, s_face_t *pFace )
 
 	for (j = 0; j < 3; j++) 
 	{
-		memset( g_szLine, 0, sizeof( g_szLine ) );
+		V_memset( g_szLine, 0, sizeof( g_szLine ) );
 
 		if (fgets( g_szLine, sizeof( g_szLine ), g_fpInput ) == NULL) 
 		{
@@ -122,7 +122,7 @@ void ParseFaceData( s_source_t *psource, int material, s_face_t *pFace )
 					ctr++;
 				}
 				token = strtok( &g_szLine[ctr], " " );
-				ctr += strlen( token ) + 1;
+				ctr += V_strlen( token ) + 1;
 			}
 			for (k = 4; k < iCount && k < MAXSTUDIOSRCBONES; k++)
 			{
@@ -131,18 +131,18 @@ void ParseFaceData( s_source_t *psource, int material, s_face_t *pFace )
 					ctr++;
 				}
 				token = strtok( &g_szLine[ctr], " " );
-				ctr += strlen( token ) + 1;
+				ctr += V_strlen( token ) + 1;
 
 				bones[k] = atoi(token);
 
 				token = strtok( &g_szLine[ctr], " " );
-				ctr += strlen( token ) + 1;
+				ctr += V_strlen( token ) + 1;
 			
 				weights[k] = atof(token);
 			}
-			// printf("%d ", iCount );
+			// Msg("%d ", iCount );
 
-			//printf("\n");
+			//Msg("\n");
 			//exit(1);
 		}
 
@@ -226,7 +226,7 @@ void Grab_Triangles( s_source_t *psource )
 			break;
 
 		// Look for extra junk that we may want to avoid...
-		int nLineLength = strlen( g_szLine );
+		int nLineLength = V_strlen( g_szLine );
 		if (nLineLength >= 64)
 		{
 			MdlWarning("Unexpected data at line %d, (need a texture name) ignoring...\n", g_iLinecount );
@@ -234,8 +234,8 @@ void Grab_Triangles( s_source_t *psource )
 		}
 
 		// strip off trailing smag
-		strncpy( texturename, g_szLine, 63 );
-		for (i = strlen( texturename ) - 1; i >= 0 && ! isgraph( texturename[i] ); i--)
+		V_strncpy( texturename, g_szLine, 63 );
+		for (i = V_strlen( texturename ) - 1; i >= 0 && ! isgraph( texturename[i] ); i--)
 		{
 		}
 		texturename[i + 1] = '\0';
@@ -245,12 +245,12 @@ void Grab_Triangles( s_source_t *psource )
 		{
 			if (sourcetexture[i][0] == '\0') 
 			{
-				strcpy( texturename, defaulttexture[i] );
+				V_strcpy_safe( texturename, defaulttexture[i] );
 				break;
 			}
-			if (stricmp( texturename, sourcetexture[i]) == 0) 
+			if (V_stricmp( texturename, sourcetexture[i]) == 0) 
 			{
-				strcpy( texturename, defaulttexture[i] );
+				V_strcpy_safe( texturename, defaulttexture[i] );
 				break;
 			}
 		}
@@ -265,7 +265,7 @@ void Grab_Triangles( s_source_t *psource )
 			continue;
 		}
 
-		if (stricmp( texturename, "null.bmp") == 0 || stricmp( texturename, "null.tga") == 0)
+		if (V_stricmp( texturename, "null.bmp") == 0 || V_stricmp( texturename, "null.tga") == 0)
 		{
 			// skip all faces with the null texture on them.
 			fgets( g_szLine, sizeof( g_szLine ), g_fpInput );
@@ -301,7 +301,7 @@ int Load_SMD ( s_source_t *psource )
 
 	if( !g_quiet )
 	{
-		printf ("SMD MODEL %s\n", psource->filename);
+		Msg ("SMD MODEL %s\n", psource->filename);
 	}
 
 	g_iLinecount = 0;
@@ -315,26 +315,26 @@ int Load_SMD ( s_source_t *psource )
 		if ((numRead == EOF) || (numRead == 0))
 			continue;
 
-		if (stricmp( cmd, "version" ) == 0) 
+		if (V_stricmp( cmd, "version" ) == 0) 
 		{
 			if (option != 1) 
 			{
 				MdlError("bad version\n");
 			}
 		}
-		else if (stricmp( cmd, "nodes" ) == 0) 
+		else if (V_stricmp( cmd, "nodes" ) == 0) 
 		{
 			psource->numbones = Grab_Nodes( psource->localBone );
 		}
-		else if (stricmp( cmd, "skeleton" ) == 0) 
+		else if (V_stricmp( cmd, "skeleton" ) == 0) 
 		{
 			Grab_Animation( psource );
 		}
-		else if (stricmp( cmd, "triangles" ) == 0) 
+		else if (V_stricmp( cmd, "triangles" ) == 0) 
 		{
 			Grab_Triangles( psource );
 		}
-		else if (stricmp( cmd, "vertexanimation" ) == 0) 
+		else if (V_stricmp( cmd, "vertexanimation" ) == 0) 
 		{
 			Grab_Vertexanimation( psource );
 		}

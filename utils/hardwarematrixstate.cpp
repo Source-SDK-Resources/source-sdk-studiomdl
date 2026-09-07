@@ -205,7 +205,7 @@ void CHardwareMatrixState::DumpState( void )
 	{
 		if( m_matrixState[i].allocated )
 		{
-			sprintf( buf, "%d: allocated: %s lastUsageID: %d globalMatrixID: %d\n",
+			V_sprintf_safe( buf, "%d: allocated: %s lastUsageID: %d globalMatrixID: %d\n",
 				i, 
 				m_matrixState[i].allocated ? "true " : "false",
 				m_matrixState[i].lastUsageID,

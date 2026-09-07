@@ -508,8 +508,8 @@ void UnifyIndices( s_source_t *psource )
 
 	// clear v_list
 	numvlist = 0;
-	memset( v_list, 0, sizeof( v_list ) );
-	memset( v_listdata, 0, sizeof( v_listdata ) );
+	V_memset( v_list, 0, sizeof( v_list ) );
+	V_memset( v_listdata, 0, sizeof( v_listdata ) );
 
 	// create an list of all the 
 	for (i = 0; i < g_numfaces; i++)
@@ -524,7 +524,7 @@ void UnifyIndices( s_source_t *psource )
 		g_src_uface[i] = uface[i];
 	}
 
-	// printf("%d : %d %d %d\n", numvlist, g_numverts, g_numnormals, g_numtexcoords );
+	// Msg("%d : %d %d %d\n", numvlist, g_numverts, g_numnormals, g_numtexcoords );
 }
 
 void CalcModelTangentSpaces( s_source_t *pSrc );
@@ -579,7 +579,7 @@ void BuildIndividualMeshes( s_source_t *psource )
 		psource->vertexInfo[i].firstref		= v_listdata[j].firstref;
 		psource->vertexInfo[i].lastref		= v_listdata[j].lastref;
 #endif
-		// printf("%4d : %2d :  %6.2f %6.2f %6.2f\n", i, psource->boneweight[i].bone[0], psource->vertex[i][0], psource->vertex[i][1], psource->vertex[i][2] );
+		// Msg("%4d : %2d :  %6.2f %6.2f %6.2f\n", i, psource->boneweight[i].bone[0], psource->vertex[i][0], psource->vertex[i][1], psource->vertex[i][2] );
 	}
 
 	// sort faces by materials, last used.
@@ -629,7 +629,7 @@ void BuildIndividualMeshes( s_source_t *psource )
 	/*
 	for (k = 0; k < MAXSTUDIOSKINS; k++)
 	{
-		printf("%d : %d:%d %d:%d\n", k, psource->mesh[k].numvertices, psource->mesh[k].vertexoffset, psource->mesh[k].numfaces, psource->mesh[k].faceoffset );
+		Msg("%d : %d:%d %d:%d\n", k, psource->mesh[k].numvertices, psource->mesh[k].vertexoffset, psource->mesh[k].numfaces, psource->mesh[k].faceoffset );
 	}
 	*/
 
@@ -650,7 +650,7 @@ void BuildIndividualMeshes( s_source_t *psource )
 				psource->face[i].c = v_ilistsort[g_src_uface[j].c] - psource->mesh[k].vertexoffset;
 				Assert( ((psource->face[i].a & 0xF0000000) == 0) && ((psource->face[i].b & 0xF0000000) == 0) && 
 					((psource->face[i].c & 0xF0000000) == 0) );
-				// printf("%3d : %4d %4d %4d\n", i, psource->face[i].a, psource->face[i].b, psource->face[i].c );
+				// Msg("%3d : %4d %4d %4d\n", i, psource->face[i].a, psource->face[i].b, psource->face[i].c );
 			}
 
 			psource->nummeshes++;
@@ -688,7 +688,7 @@ int Load_VRM ( s_source_t *psource )
 
 	if( !g_quiet )
 	{
-		printf ("grabbing %s\n", psource->filename);
+		Msg ("grabbing %s\n", psource->filename);
 	}
 
 	g_iLinecount = 0;
@@ -696,72 +696,72 @@ int Load_VRM ( s_source_t *psource )
 	while (fgets( g_szLine, sizeof( g_szLine ), g_fpInput ) != NULL) {
 		g_iLinecount++;
 		sscanf( g_szLine, "%1023s %d", cmd, &option );
-		if (stricmp( cmd, "version" ) == 0) {
+		if (V_stricmp( cmd, "version" ) == 0) {
 			if (option != 2) {
 				MdlError("bad version\n");
 			}
 		}
-		else if (stricmp( cmd, "name" ) == 0) {
+		else if (V_stricmp( cmd, "name" ) == 0) {
 		}
-		else if (stricmp( cmd, "vertices" ) == 0) {
+		else if (V_stricmp( cmd, "vertices" ) == 0) {
 			g_numverts = option;
 		}
-		else if (stricmp( cmd, "faces" ) == 0) {
+		else if (V_stricmp( cmd, "faces" ) == 0) {
 			g_numfaces = option;
 		}
-		else if (stricmp( cmd, "materials" ) == 0) {
+		else if (V_stricmp( cmd, "materials" ) == 0) {
 			// doesn't matter;
 		}
-		else if (stricmp( cmd, "texcoords" ) == 0) {
+		else if (V_stricmp( cmd, "texcoords" ) == 0) {
 			g_numtexcoords = option;
 			if (option == 0)
 				MdlError( "model has no texture coordinates\n");
 		}
-		else if (stricmp( cmd, "normals" ) == 0) {
+		else if (V_stricmp( cmd, "normals" ) == 0) {
 			g_numnormals = option;
 		}
-		else if (stricmp( cmd, "tristrips" ) == 0) {
+		else if (V_stricmp( cmd, "tristrips" ) == 0) {
 			// should be 0;
 		}
 
-		else if (stricmp( cmd, "vertexlist" ) == 0) {
+		else if (V_stricmp( cmd, "vertexlist" ) == 0) {
 			Grab_Vertexlist( psource );
 		}
-		else if (stricmp( cmd, "facelist" ) == 0) {
+		else if (V_stricmp( cmd, "facelist" ) == 0) {
 			Grab_Facelist( psource );
 		}
-		else if (stricmp( cmd, "materiallist" ) == 0) {
+		else if (V_stricmp( cmd, "materiallist" ) == 0) {
 			Grab_Materiallist( psource );
 		}
-		else if (stricmp( cmd, "texcoordlist" ) == 0) {
+		else if (V_stricmp( cmd, "texcoordlist" ) == 0) {
 			Grab_Texcoordlist( psource );
 		}
-		else if (stricmp( cmd, "normallist" ) == 0) {
+		else if (V_stricmp( cmd, "normallist" ) == 0) {
 			Grab_Normallist( psource );
 		}
-		else if (stricmp( cmd, "faceattriblist" ) == 0) {
+		else if (V_stricmp( cmd, "faceattriblist" ) == 0) {
 			Grab_Faceattriblist( psource );
 		}
 
-		else if (stricmp( cmd, "MRM" ) == 0) {
+		else if (V_stricmp( cmd, "MRM" ) == 0) {
 		}
-		else if (stricmp( cmd, "MRMvertices" ) == 0) {
+		else if (V_stricmp( cmd, "MRMvertices" ) == 0) {
 		}
-		else if (stricmp( cmd, "MRMfaces" ) == 0) {
+		else if (V_stricmp( cmd, "MRMfaces" ) == 0) {
 		}
-		else if (stricmp( cmd, "MRMfaceupdates" ) == 0) 
+		else if (V_stricmp( cmd, "MRMfaceupdates" ) == 0) 
 		{
 			Grab_MRMFaceupdates( psource );
 		}
 
-		else if (stricmp( cmd, "nodes" ) == 0) {
+		else if (V_stricmp( cmd, "nodes" ) == 0) {
 			psource->numbones = Grab_Nodes( psource->localBone );
 		}
-		else if (stricmp( cmd, "skeleton" ) == 0) {
+		else if (V_stricmp( cmd, "skeleton" ) == 0) {
 			Grab_Animation( psource );
 		}
 /*		
-		else if (stricmp( cmd, "triangles" ) == 0) {
+		else if (V_stricmp( cmd, "triangles" ) == 0) {
 			Grab_Triangles( psource );
 		}
 */

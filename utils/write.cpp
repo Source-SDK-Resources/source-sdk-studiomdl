@@ -104,7 +104,7 @@ static void AddToStringTable( void *base, int *ptr, const char *string )
 {
 	for (int i = 0; i < numStrings; i++)
 	{
-		if (!string || !strcmp( string, strings[i].string ))
+		if (!string || !V_strcmp( string, strings[i].string ))
 		{
 			strings[numStrings].base = (byte *)base;
 			strings[numStrings].ptr = ptr;
@@ -144,8 +144,8 @@ static byte *WriteStringTable( byte *pData )
 			// keep track of address in case of duplication
 			strings[i].addr = pData;
 			// copy string data, add a terminating \0
-			strcpy( (char *)pData, strings[i].string );
-			pData += strlen( strings[i].string );
+			V_strcpy( (char *)pData, strings[i].string );
+			pData += V_strlen( strings[i].string );
 			*pData = '\0';
 			pData++;
 		}
@@ -223,7 +223,7 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 			k = g_axisinterpbones[j].bone;
 			pbone[k].procindex		= (byte *)&pProc[i] - (byte *)&pbone[k];
 			pbone[k].proctype		= STUDIO_PROC_AXISINTERP;
-			// printf("bone %d %d\n", j, pbone[k].procindex );
+			// Msg("bone %d %d\n", j, pbone[k].procindex );
 			pProc[i].control		= g_axisinterpbones[j].control;
 			pProc[i].axis			= g_axisinterpbones[j].axis;
 			for (k = 0; k < 6; k++)
@@ -248,7 +248,7 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 			k = g_quatinterpbones[j].bone;
 			pbone[k].procindex		= (byte *)&pProc[i] - (byte *)&pbone[k];
 			pbone[k].proctype		= STUDIO_PROC_QUATINTERP;
-			// printf("bone %d %d\n", j, pbone[k].procindex );
+			// Msg("bone %d %d\n", j, pbone[k].procindex );
 			pProc[i].control		= g_quatinterpbones[j].control;
 
 			mstudioquatinterpinfo_t *pTrigger = (mstudioquatinterpinfo_t *)pData;
@@ -457,14 +457,14 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 			for (j = 0; j < pseqdesc->groupsize[0]; j++)
 			{
 				*(pposekey++) = g_sequence[i].param0[j];
-				// printf("%.2f ", g_sequence[i].param0[j] );
+				// Msg("%.2f ", g_sequence[i].param0[j] );
 			}
 			for (j = 0; j < pseqdesc->groupsize[1]; j++)
 			{
 				*(pposekey++) = g_sequence[i].param1[j];
-				// printf("%.2f ", g_sequence[i].param1[j] );
+				// Msg("%.2f ", g_sequence[i].param1[j] );
 			}
-			// printf("\n" );
+			// Msg("\n" );
 		}
 
 		// pseqdesc->motiontype	= g_sequence[i].motiontype;
@@ -519,9 +519,9 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 			}
 				 						
 			
-			// printf("%4d : %d %f\n", pevent[j].event, g_sequence[i].event[j].frame, pevent[j].cycle );
+			// Msg("%4d : %d %f\n", pevent[j].event, g_sequence[i].event[j].frame, pevent[j].cycle );
 			// AddToStringTable( &pevent[j], &pevent[j].szoptionindex, g_sequence[i].event[j].options );
-			strcpy( pevent[j].options, g_sequence[i].event[j].options );
+			V_strcpy_safe( pevent[j].options, g_sequence[i].event[j].options );
 		}
 		ALIGN4( pData );
 
@@ -580,7 +580,7 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 		if (j < g_numbones)
 		{
 			// allocate new block
-			//printf("new %08x\n", pData );
+			//Msg("new %08x\n", pData );
 			pweight						= (float *)pData;
 			pseqdesc->weightlistindex = (pData - pSequenceStart);
 			pData += g_numbones * sizeof( float );
@@ -592,7 +592,7 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 		else
 		{
 			// use previous boneweight
-			//printf("prev %08x\n", pweight );
+			//Msg("prev %08x\n", pweight );
 			pseqdesc->weightlistindex = ((byte *)pweight - pSequenceStart);
 		}
 
@@ -655,7 +655,7 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 	for (i = 0; i < g_numxnodes; i++)
 	{
 		AddToStringTable( phdr, pxnodename, g_xnodename[i+1] );
-		// printf("%d : %s\n", i, g_xnodename[i+1] );
+		// Msg("%d : %s\n", i, g_xnodename[i+1] );
 		pxnodename++;
 	}
 
@@ -666,13 +666,13 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 	ALIGN4( pData );
 	for (i = 0; i < g_numxnodes; i++)
 	{
-//		printf("%2d (%12s) : ", i + 1, g_xnodename[i+1] );
+//		Msg("%2d (%12s) : ", i + 1, g_xnodename[i+1] );
 		for (j = 0; j < g_numxnodes; j++)
 		{
 			*ptransition++ = g_xnode[i][j];
-//			printf(" %2d", g_xnode[i][j] );
+//			Msg(" %2d", g_xnode[i][j] );
 		}
-//		printf("\n" );
+//		Msg("\n" );
 	}
 }
 
@@ -711,18 +711,26 @@ const vertexFileHeader_t * mstudiomodel_t::CacheVertexData( void *pModelData )
 	studiohdr_t *pActiveStudioHdr = static_cast<studiohdr_t *>(pModelData);
 	Assert( pActiveStudioHdr );
 
+#ifdef PLATFORM_64BITS
 	if ( pActiveStudioHdr->VertexBase() )
 	{
-		return (vertexFileHeader_t *)pActiveStudioHdr->VertexBase();
+		return (vertexFileHeader_t*)pActiveStudioHdr->VertexBase();
 	}
+#else
+	if (pActiveStudioHdr->pVertexBase)
+	{
+		return (vertexFileHeader_t*)pActiveStudioHdr->pVertexBase;
+	}
+
+#endif // PLATFORM_64BITS
 
 	// mandatory callback to make requested data resident
 	// load and persist the vertex file
 	char fileName[MAX_PATH];
-	strcpy( fileName, "models/" );	
-	strcat( fileName, pActiveStudioHdr->pszName() );
-	Q_StripExtension( fileName, fileName, sizeof( fileName ) );
-	strcat( fileName, ".vvd" );
+	V_strcpy_safe( fileName, "models/" );	
+	V_strcat_safe( fileName, pActiveStudioHdr->pszName() );
+	V_StripExtension( fileName, fileName, sizeof( fileName ) );
+	V_strcat_safe( fileName, ".vvd" );
 
 	// load the model
 	FileHandle_t fileHandle = g_pFileSystem->Open( fileName, "rb" );
@@ -772,7 +780,12 @@ const vertexFileHeader_t * mstudiomodel_t::CacheVertexData( void *pModelData )
 	free( pVvdHdr );
 	pVvdHdr = pNewVvdHdr;
 
+#ifdef PLATFORM_64BITS
 	pActiveStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVvdHdr;
+#else
+	pActiveStudioHdr->pVertexBase = (void*)pVvdHdr;
+#endif // PLATFORM_64BITS
+
 	return pVvdHdr;
 }
 
@@ -799,7 +812,7 @@ byte *WriteAnimationData( s_animation_t *srcanim, byte *pData )
 	for (j = 0; j < g_numbones; j++)
 	{
 		// destanim->weight = srcanim->weight[j];
-		// printf( "%s %.1f\n", g_bonetable[j].name, destanim->weight );
+		// Msg( "%s %.1f\n", g_bonetable[j].name, destanim->weight );
 		destanim->flags = 0;
 
 		numPos[ (srcanim->numanim[j][0] != 0) + (srcanim->numanim[j][1] != 0) + (srcanim->numanim[j][2] != 0) ]++;
@@ -970,7 +983,7 @@ byte *WriteIkErrors( s_animation_t *srcanim, byte *pData )
 		}
 
 		/*
-		printf("%d %d %d %d : %.2f %.2f %.2f %.2f\n", 
+		Msg("%d %d %d %d : %.2f %.2f %.2f %.2f\n", 
 			srcanim->ikrule[j].start, srcanim->ikrule[j].peak, srcanim->ikrule[j].tail, srcanim->ikrule[j].end, 
 			pikrule->start, pikrule->peak, pikrule->tail, pikrule->end );
 		*/
@@ -1009,15 +1022,15 @@ byte *WriteIkErrors( s_animation_t *srcanim, byte *pData )
 			pCompressed->scale[k] = srcanim->ikrule[j].scale[k];
 			pCompressed->offset[k] = (pData - (byte*)pCompressed);
 			int size = srcanim->ikrule[j].numanim[k] * sizeof( mstudioanimvalue_t );
-			memmove( pData, srcanim->ikrule[j].anim[k], size );
+			V_memmove( pData, srcanim->ikrule[j].anim[k], size );
 			pData += size;
 		}
 
-		if (strlen( srcanim->ikrule[j].attachment ) > 0)
+		if (V_strlen( srcanim->ikrule[j].attachment ) > 0)
 		{
 			// don't use string table, we're probably not in the same file.
-			int size = strlen( srcanim->ikrule[j].attachment ) + 1;
-			strcpy( (char *)pData, srcanim->ikrule[j].attachment );
+			int size = V_strlen( srcanim->ikrule[j].attachment ) + 1;
+			V_strcpy( (char *)pData, srcanim->ikrule[j].attachment );
 			pikrule->szattachmentindex = pData - (byte *)pikrule;
 			pData += size;
 		}
@@ -1070,7 +1083,7 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 	//      ------------ ------- ------- : ------- (-------)
 	if( g_verbose )
 	{
-		printf("   animation       x       y       ips    angle\n");
+		Msg("   animation       x       y       ips    angle\n");
 	}
 
 	for (i = 0; i < animcount; i++) 
@@ -1104,7 +1117,7 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 			float d = sqrt( DotProduct( srcanim->piecewisemove[j].pos, srcanim->piecewisemove[j].pos ) );
 			if( g_verbose )
 			{
-				printf("%12s %7.2f %7.2f : %7.2f (%7.2f) %.1f\n", srcanim->name, srcanim->piecewisemove[j].pos[0], srcanim->piecewisemove[j].pos[1], d * r, a, t );
+				Msg("%12s %7.2f %7.2f : %7.2f (%7.2f) %.1f\n", srcanim->name, srcanim->piecewisemove[j].pos[0], srcanim->piecewisemove[j].pos[1], d * r, a, t );
 			}
 		}
 
@@ -1143,8 +1156,8 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 				int size = pBlockEnd - pBlockData;
 				int shift = pBlockData2 - pBlockData;
 
-				memmove( pBlockData2, pBlockData, size );
-				memset( pBlockData, 0, shift );
+				V_memmove( pBlockData2, pBlockData, size );
+				V_memset( pBlockData, 0, shift );
 
 				pBlockData = pBlockData2;
 				pIkData = pIkData + shift;
@@ -1163,8 +1176,8 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 				int size = pBlockEnd - pBlockData;
 				int shift = pBlockData2 - pBlockData;
 
-				memmove( pBlockData2, pBlockData, size );
-				memset( pBlockData, 0, shift );
+				V_memmove( pBlockData2, pBlockData, size );
+				V_memset( pBlockData, 0, shift );
 
 				pBlockData = pBlockData2;
 				pIkData = pIkData + shift;
@@ -1197,7 +1210,7 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 			pBlockData = pBlockEnd;
 		}
 
-		// printf("raw bone data %d : %s\n", (byte *)destanimvalue - pData, srcanim->name);
+		// Msg("raw bone data %d : %s\n", (byte *)destanimvalue - pData, srcanim->name);
 	}
 
 	if( !g_quiet )
@@ -1205,7 +1218,7 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 		/*
 		for (i = 0; i < g_numanimblocks; i++)
 		{
-			printf("%2d (%3d:%3d): %d\n", i, g_animblock[i].iStartAnim, g_animblock[i].iEndAnim, g_animblock[i].end - g_animblock[i].start );
+			Msg("%2d (%3d:%3d): %d\n", i, g_animblock[i].iStartAnim, g_animblock[i].iEndAnim, g_animblock[i].end - g_animblock[i].start );
 		}
 		*/
 	}
@@ -1213,9 +1226,9 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 	if( !g_quiet )
 	{
 		/*
-		printf("raw anim data %d : %d\n", rawanimbytes, animboneframes );
-		printf("pos  %d %d %d %d\n", numPos[0], numPos[1], numPos[2], numPos[3] );
-		printf("axis %d %d %d %d : %d\n", numAxis[0], numAxis[1], numAxis[2], numAxis[3], useRaw );
+		Msg("raw anim data %d : %d\n", rawanimbytes, animboneframes );
+		Msg("pos  %d %d %d %d\n", numPos[0], numPos[1], numPos[2], numPos[3] );
+		Msg("axis %d %d %d %d : %d\n", numAxis[0], numAxis[1], numAxis[2], numAxis[3], useRaw );
 		*/
 	}
 
@@ -1263,12 +1276,12 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 
 			if ((!g_quiet) && (g_bonetable[j].flags & (BONE_HAS_SAVEFRAME_POS | BONE_HAS_SAVEFRAME_ROT)))
 			{
-				printf("$BoneSaveFrame \"%s\"", g_bonetable[j].name );
+				Msg("$BoneSaveFrame \"%s\"", g_bonetable[j].name );
 				if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_POS)
-					printf(" position" );
+					Msg(" position" );
 				if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_ROT)
-					printf(" rotation" );
-				printf("\n");
+					Msg(" rotation" );
+				Msg("\n");
 			}
 		}
 	}
@@ -1389,22 +1402,22 @@ static void WriteVertices( studiohdr_t *phdr )
 	if (!g_nummodelsbeforeLOD)
 		return;
 
-	strcpy( fileName, gamedir );
+	V_strcpy_safe( fileName, gamedir );
 //	if( *g_pPlatformName )
 //	{
-//		strcat( fileName, "platform_" );
-//		strcat( fileName, g_pPlatformName );
-//		strcat( fileName, "/" );	
+//		V_strcat_safe( fileName, "platform_" );
+//		V_strcat_safe( fileName, g_pPlatformName );
+//		V_strcat_safe( fileName, "/" );	
 //	}
-	strcat( fileName, "models/" );	
-	strcat( fileName, outname );
-	Q_StripExtension( fileName, fileName, sizeof( fileName ) );
-	strcat( fileName, ".vvd" );
+	V_strcat_safe( fileName, "models/" );	
+	V_strcat_safe( fileName, outname );
+	V_StripExtension( fileName, fileName, sizeof( fileName ) );
+	V_strcat_safe( fileName, ".vvd" );
 
 	if ( !g_quiet )
 	{
-		printf ("---------------------\n");
-		printf ("writing %s:\n", fileName);
+		Msg ("---------------------\n");
+		Msg ("writing %s:\n", fileName);
 	}
 
 	pStart = (byte *)kalloc( 1, FILEBUFFER );
@@ -1445,7 +1458,7 @@ static void WriteVertices( studiohdr_t *phdr )
 		pData += pLodDataSrc->numvertices * sizeof( mstudiovertex_t );
 		for (j = 0; j < pLodDataSrc->numvertices; j++)
 		{
-//			printf( "saving bone weight %d for model %d at 0x%p\n",
+//			Msg( "saving bone weight %d for model %d at 0x%p\n",
 //				j, i, &pbone[j] );
 
 			VectorCopy( pLodDataSrc->vertex[j].position, pVert[j].m_vecPosition );
@@ -1453,7 +1466,7 @@ static void WriteVertices( studiohdr_t *phdr )
 			Vector2DCopy( pLodDataSrc->vertex[j].texcoord, pVert[j].m_vecTexCoord );
 
 			mstudioboneweight_t *pBoneWeight = &pVert[j].m_BoneWeights;
-			memset( pBoneWeight, 0, sizeof( mstudioboneweight_t ) );
+			V_memset( pBoneWeight, 0, sizeof( mstudioboneweight_t ) );
 			pBoneWeight->numbones = pLodDataSrc->vertex[j].globalBoneweight.numbones;
 			for (k = 0; k < pBoneWeight->numbones; k++)
 			{
@@ -1466,7 +1479,7 @@ static void WriteVertices( studiohdr_t *phdr )
 
 		if (!g_quiet)
 		{
-			printf( "vertices   %7d bytes (%d vertices)\n", pData - cur, pLodDataSrc->numvertices );
+			Msg( "vertices   %7d bytes (%d vertices)\n", pData - cur, pLodDataSrc->numvertices );
 		}
 	}
 
@@ -1498,13 +1511,13 @@ static void WriteVertices( studiohdr_t *phdr )
 
 		if (!g_quiet)
 		{
-			printf( "tangents   %7d bytes (%d vertices)\n", pData - cur, pLodDataSrc->numvertices );
+			Msg( "tangents   %7d bytes (%d vertices)\n", pData - cur, pLodDataSrc->numvertices );
 		}
 	}
 
 	if (!g_quiet)
 	{
-		printf( "total      %7d bytes\n", pData - pStart );
+		Msg( "total      %7d bytes\n", pData - pStart );
 	}
 
 	// fileHeader->length = pData - pStart;
@@ -1556,7 +1569,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 	for (j = 0; j < g_numflexdesc; j++)
 	{
-		// printf("%d %s\n", j, g_flexdesc[j].FACS );
+		// Msg("%d %s\n", j, g_flexdesc[j].FACS );
 		AddToStringTable( pflexdesc, &pflexdesc->szFACSindex, g_flexdesc[j].FACS );
 		pflexdesc++;
 	}
@@ -1675,7 +1688,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 	if( !g_quiet )
 	{
-		printf("ik/pose    %7d bytes\n", pData - cur );
+		Msg("ik/pose    %7d bytes\n", pData - cur );
 	}
 	cur = (int)pData;
 
@@ -1686,7 +1699,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 		byte *pModelStart = (byte *)(&pmodel[i]);
 		
-		strcpy( pmodel[i].name, g_model[i]->filename );
+		V_strcpy_safe( pmodel[i].name, g_model[i]->filename );
 		// AddToStringTable( &pmodel[i], &pmodel[i].sznameindex, g_model[i]->filename );
 
 		// pmodel[i].mrmbias = g_model[i]->mrmbias;
@@ -1783,7 +1796,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 		if ( !g_quiet )
 		{
-			printf("eyeballs   %7d bytes (%d eyeballs)\n", pData - cur, g_model[i]->numeyeballs );
+			Msg("eyeballs   %7d bytes (%d eyeballs)\n", pData - cur, g_model[i]->numeyeballs );
 		}
 
 		// move flexes into individual meshes
@@ -1838,10 +1851,10 @@ static void WriteModel( studiohdr_t *phdr )
 					pflex->numverts		= numflexkeys[j];
 					pflex->vertindex	= (pData - (byte *)pflex);
 					pflex->flexpair		= g_flexkey[j].flexpair;
-					// printf("%d %d %s : %f %f %f %f\n", j, g_flexkey[j].flexdesc, g_flexdesc[g_flexkey[j].flexdesc].FACS, g_flexkey[j].target0, g_flexkey[j].target1, g_flexkey[j].target2, g_flexkey[j].target3 );
-					// if (j < 9) printf("%d %d %s : %d (%d) %f\n", j, g_flexkey[j].flexdesc, g_flexdesc[g_flexkey[j].flexdesc].FACS, g_flexkey[j].numvanims, pflex->numverts, g_flexkey[j].target );
+					// Msg("%d %d %s : %f %f %f %f\n", j, g_flexkey[j].flexdesc, g_flexdesc[g_flexkey[j].flexdesc].FACS, g_flexkey[j].target0, g_flexkey[j].target1, g_flexkey[j].target2, g_flexkey[j].target3 );
+					// if (j < 9) Msg("%d %d %s : %d (%d) %f\n", j, g_flexkey[j].flexdesc, g_flexdesc[g_flexkey[j].flexdesc].FACS, g_flexkey[j].numvanims, pflex->numverts, g_flexkey[j].target );
 
-					// printf("%d %d : %d %f\n", j, g_flexkey[j].flexnum, g_flexkey[j].numvanims, g_flexkey[j].target );
+					// Msg("%d %d : %d %f\n", j, g_flexkey[j].flexnum, g_flexkey[j].numvanims, g_flexkey[j].target );
 
 					pvertanim = (mstudiovertanim_t *)pData;
 					pData += pflex->numverts * sizeof( mstudiovertanim_t );
@@ -1867,14 +1880,14 @@ static void WriteModel( studiohdr_t *phdr )
 							if ((tmp - pvanim->pos).Length() > 0.1)
 							{	
 								pvertanim->delta.x = pvanim->pos.x;
-								printf("%f %f %f  : %f %f %f\n", 
+								Msg("%f %f %f  : %f %f %f\n", 
 									pvanim->pos[0], pvanim->pos[1], pvanim->pos[2],
 									tmp.x, tmp.y, tmp.z );
 							}
 							*/
-							// if (j < 9) printf("%d %.2f %.2f %.2f\n", n, pvanim->pos[0], pvanim->pos[1], pvanim->pos[2] );
+							// if (j < 9) Msg("%d %.2f %.2f %.2f\n", n, pvanim->pos[0], pvanim->pos[1], pvanim->pos[2] );
 						}
-						// printf("%d %.2f %.2f %.2f\n", pvanim->vertex, pvanim->pos[0], pvanim->pos[1], pvanim->pos[2] );
+						// Msg("%d %.2f %.2f %.2f\n", pvanim->vertex, pvanim->pos[0], pvanim->pos[1], pvanim->pos[2] );
 						pvanim++;
 					}
 					pflex++;
@@ -1884,7 +1897,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 		if( !g_quiet )
 		{
-			printf("flexes     %7d bytes (%d flexes)\n", pData - cur, g_numflexkeys );
+			Msg("flexes     %7d bytes (%d flexes)\n", pData - cur, g_numflexkeys );
 		}
 		cur = (int)pData;
 	}
@@ -1913,7 +1926,7 @@ static void WriteModel( studiohdr_t *phdr )
 	{
 		panimblock[i].datastart = g_animblock[i].start - pBlockStart;
 		panimblock[i].dataend = g_animblock[i].end - pBlockStart;
-		// printf("block %d : %x %x (%x)\n", i, panimblock[i].datastart, panimblock[i].dataend, panimblock[i].dataend - panimblock[i].datastart );
+		// Msg("block %d : %x %x (%x)\n", i, panimblock[i].datastart, panimblock[i].dataend, panimblock[i].dataend - panimblock[i].datastart );
 	}
 	AddToStringTable( phdr, &phdr->szanimblocknameindex, g_animblockname );
 }
@@ -1961,8 +1974,8 @@ void LoadMaterials( studiohdr_t *phdr )
 			// search through all specified directories until a valid material is found
 			for( j = 0; j < phdr->numcdtextures && IsErrorMaterial( pMaterial ); j++ )
 			{
-				strcpy( szPath, phdr->pCdtexture( j ) );
-				strcat( szPath, phdr->pTexture( i )->pszName( ) );
+				V_strcpy_safe( szPath, phdr->pCdtexture( j ) );
+				V_strcat_safe( szPath, phdr->pTexture( i )->pszName( ) );
 
 				pMaterial = g_pMaterialSystem->FindMaterial( szPath, TEXTURE_GROUP_OTHER, false );
 			}
@@ -1972,8 +1985,8 @@ void LoadMaterials( studiohdr_t *phdr )
 				// so that the materialsystem will give an error.
 				for( j = 0; j < phdr->numcdtextures; j++ )
 				{
-					strcpy( szPath, phdr->pCdtexture( j ) );
-					strcat( szPath, phdr->pTexture( i )->pszName( ) );
+					V_strcpy_safe( szPath, phdr->pCdtexture( j ) );
+					V_strcat_safe( szPath, phdr->pTexture( i )->pszName( ) );
 					g_pMaterialSystem->FindMaterial( szPath, TEXTURE_GROUP_OTHER, true );
 				}
 			}
@@ -1985,7 +1998,7 @@ void LoadMaterials( studiohdr_t *phdr )
 			IMaterialVar *clientShaderVar = pMaterial->FindVar( "$clientShader", &found, false );
 			if( found )
 			{
-				if (stricmp( clientShaderVar->GetStringValue(), "MouthShader") == 0)
+				if (V_stricmp( clientShaderVar->GetStringValue(), "MouthShader") == 0)
 				{
 					phdr->pTexture( i )->flags = 1;
 				}
@@ -2002,7 +2015,7 @@ void WriteKeyValues( studiohdr_t *phdr, CUtlVector< char > *pKeyValue )
 	phdr->keyvaluesize = KeyValueTextSize( pKeyValue );
 	if (phdr->keyvaluesize)
 	{
-		memcpy(	pData, KeyValueText( pKeyValue ), phdr->keyvaluesize );
+		V_memcpy(	pData, KeyValueText( pKeyValue ), phdr->keyvaluesize );
 
 		// Add space for a null terminator
 		pData[phdr->keyvaluesize] = 0;
@@ -2020,7 +2033,7 @@ void WriteSeqKeyValues( mstudioseqdesc_t *pseqdesc, CUtlVector< char > *pKeyValu
 	pseqdesc->keyvaluesize = KeyValueTextSize( pKeyValue );
 	if (pseqdesc->keyvaluesize)
 	{
-		memcpy(	pData, KeyValueText( pKeyValue ), pseqdesc->keyvaluesize );
+		V_memcpy(	pData, KeyValueText( pKeyValue ), pseqdesc->keyvaluesize );
 
 		// Add space for a null terminator
 		pData[pseqdesc->keyvaluesize] = 0;
@@ -2035,8 +2048,8 @@ void WriteSeqKeyValues( mstudioseqdesc_t *pseqdesc, CUtlVector< char > *pKeyValu
 void EnsureFileDirectoryExists( const char *pFilename )
 {
 	char dirName[MAX_PATH];
-	Q_strncpy( dirName, pFilename, sizeof( dirName ) );
-	Q_FixSlashes( dirName );
+	V_strncpy( dirName, pFilename, sizeof( dirName ) );
+	V_FixSlashes( dirName );
 	char *pLastSlash = strrchr( dirName, CORRECT_PATH_SEPARATOR );
 	if ( pLastSlash )
 	{
@@ -2045,7 +2058,7 @@ void EnsureFileDirectoryExists( const char *pFilename )
 		if ( _access( dirName, 0 ) != 0 )
 		{
 			char cmdLine[512];
-			Q_snprintf( cmdLine, sizeof( cmdLine ), "md \"%s\"", dirName );
+			V_snprintf( cmdLine, sizeof( cmdLine ), "md \"%s\"", dirName );
 			system( cmdLine );
 		}
 	}
@@ -2067,7 +2080,7 @@ void WriteModelFiles(void)
 	pBlockData = NULL;
 	pBlockStart = NULL;
 
-	Q_StripExtension( outname, outname, sizeof( outname ) );
+	V_StripExtension( outname, outname, sizeof( outname ) );
 
 	if (g_bXbox && g_animblocksize == 0 && g_numani > 2)
 	{
@@ -2077,10 +2090,10 @@ void WriteModelFiles(void)
 	if (g_animblocksize != 0)
 	{
 		// write the non-default g_sequence group data to separate files
-		sprintf( g_animblockname, "models/%s.ani", outname );
+		V_sprintf_safe( g_animblockname, "models/%s.ani", outname );
 
-		strcpy( filename, gamedir );
-		strcat( filename, g_animblockname );	
+		V_strcpy_safe( filename, gamedir );
+		V_strcat_safe( filename, g_animblockname );	
 
 		EnsureFileDirectoryExists( filename );
 
@@ -2105,19 +2118,19 @@ void WriteModelFiles(void)
 	phdr->id = IDSTUDIOHEADER;
 	phdr->version = STUDIO_VERSION;
 
-	strcat (outname, ".mdl");
+	V_strcat_safe (outname, ".mdl");
 
-	// strcpy( outname, ExpandPath( outname ) );
+	// V_strcpy_safe( outname, ExpandPath( outname ) );
 
-	strcpy( filename, gamedir );
+	V_strcpy_safe( filename, gamedir );
 //	if( *g_pPlatformName )
 //	{
-//		strcat( filename, "platform_" );
-//		strcat( filename, g_pPlatformName );
-//		strcat( filename, "/" );
+//		V_strcat_safe( filename, "platform_" );
+//		V_strcat_safe( filename, g_pPlatformName );
+//		V_strcat_safe( filename, "/" );
 //	}
-	strcat( filename, "models/" );	
-	strcat( filename, outname );	
+	V_strcat_safe( filename, "models/" );	
+	V_strcat_safe( filename, outname );	
 
 	
 	// Create the directory.
@@ -2126,8 +2139,8 @@ void WriteModelFiles(void)
 
 	if( !g_quiet )
 	{
-		printf ("---------------------\n");
-		printf ("writing %s:\n", filename);
+		Msg ("---------------------\n");
+		Msg ("writing %s:\n", filename);
 	}
 
 	if (!g_bVerifyOnly)
@@ -2164,27 +2177,27 @@ void WriteModelFiles(void)
 
 	BeginStringTable( );
 
-	strcpy( phdr->name, outname );
+	V_strcpy_safe( phdr->name, outname );
 	// AddToStringTable( phdr, &phdr->sznameindex, outname );
 
 	WriteBoneInfo( phdr );
 	if( !g_quiet )
 	{
-		printf("bones      %7d bytes (%d)\n", pData - pStart - total, g_numbones );
+		Msg("bones      %7d bytes (%d)\n", pData - pStart - total, g_numbones );
 	}
 	total = pData - pStart;
 
 	pData = WriteAnimations( pData, pStart, 0, phdr, NULL );
 	if( !g_quiet )
 	{
-		printf("animations %7d bytes (%d anims) (%d frames) [%d:%02d]\n", pData - pStart - total, g_numani, totalframes, (int)totalseconds / 60, (int)totalseconds % 60 );
+		Msg("animations %7d bytes (%d anims) (%d frames) [%d:%02d]\n", pData - pStart - total, g_numani, totalframes, (int)totalseconds / 60, (int)totalseconds % 60 );
 	}
 	total  = pData - pStart;
 
 	WriteSequenceInfo( phdr );
 	if( !g_quiet )
 	{
-		printf("sequences  %7d bytes (%d seq) \n", pData - pStart - total, g_sequence.Count() );
+		Msg("sequences  %7d bytes (%d seq) \n", pData - pStart - total, g_sequence.Count() );
 	}
 	total  = pData - pStart;
 
@@ -2192,7 +2205,7 @@ void WriteModelFiles(void)
 	/*
 	if( !g_quiet )
 	{
-		printf("models     %7d bytes\n", pData - pStart - total );
+		Msg("models     %7d bytes\n", pData - pStart - total );
 	}
 	*/
 	total  = pData - pStart;
@@ -2200,14 +2213,14 @@ void WriteModelFiles(void)
 	WriteTextures( phdr );
 	if( !g_quiet )
 	{
- 		printf("textures   %7d bytes\n", pData - pStart - total );
+ 		Msg("textures   %7d bytes\n", pData - pStart - total );
 	}
 	total  = pData - pStart;
 
 	WriteKeyValues( phdr, &g_KeyValueText );
 	if( !g_quiet )
 	{
-		printf("keyvalues  %7d bytes\n", pData - pStart - total );
+		Msg("keyvalues  %7d bytes\n", pData - pStart - total );
 	}
 	total  = pData - pStart;
 
@@ -2229,7 +2242,7 @@ void WriteModelFiles(void)
 
 	if( !g_quiet )
 	{
-		printf("collision  %7d bytes\n", pData - pStart - total );
+		Msg("collision  %7d bytes\n", pData - pStart - total );
 	}
 
 	AssignMeshIDs( phdr );
@@ -2237,14 +2250,14 @@ void WriteModelFiles(void)
 	phdr->length = pData - pStart;
 	if( !g_quiet )
 	{
-		printf("total      %7d\n", phdr->length );
+		Msg("total      %7d\n", phdr->length );
 	}
 
 	// Load materials for this model via the material system so that the
 	// optimizer can ask questions about the materials.
 	char materialDir[256];
-	strcpy( materialDir, gamedir );
-	strcat( materialDir, "materials" );	
+	V_strcpy_safe( materialDir, gamedir );
+	V_strcat_safe( materialDir, "materials" );	
 	InitMaterialSystem( materialDir );
 	LoadMaterials( phdr );
 
@@ -2261,10 +2274,10 @@ void WriteModelFiles(void)
 
 		if ( !g_quiet )
 		{
-			printf ("---------------------\n");
-			printf("writing %s:\n", g_animblockname);
-			printf("blocks	   %7d\n", g_numanimblocks );
-			printf("total      %7d\n", pblockhdr->length );
+			Msg ("---------------------\n");
+			Msg("writing %s:\n", g_animblockname);
+			Msg("blocks	   %7d\n", g_numanimblocks );
+			Msg("total      %7d\n", pblockhdr->length );
 		}
 	}
 
@@ -2488,7 +2501,7 @@ bool BuildSortedVertexList(const studiohdr_t *pStudioHdr, const void *pVtxBuff, 
 
 	// allocate pools
 	pVertexPools = (vertexPool_t*)malloc(numVertexPools*sizeof(vertexPool_t));
-	memset(pVertexPools, 0, numVertexPools*sizeof(vertexPool_t));
+	V_memset(pVertexPools, 0, numVertexPools*sizeof(vertexPool_t));
 
 	// iterate lods, mark referenced indexes
 	numVertexPools = 0;
@@ -2556,7 +2569,7 @@ bool BuildSortedVertexList(const studiohdr_t *pStudioHdr, const void *pVtxBuff, 
 						
 						// sanity check the indexes have 100% coverage of the vertexes
 						pVertexes = (int*)malloc(pStripGroupHdr->numVerts*sizeof(int));
-						memset(pVertexes, 0xFF, pStripGroupHdr->numVerts*sizeof(int));
+						V_memset(pVertexes, 0xFF, pStripGroupHdr->numVerts*sizeof(int));
 
 						for (n=0; n<pStripGroupHdr->numIndices; n++)
 						{
@@ -2616,7 +2629,7 @@ bool BuildSortedVertexList(const studiohdr_t *pStudioHdr, const void *pVtxBuff, 
 			}
 		}
 
-		memcpy(&pVertexList[numVertexes], pPool->pVertexList, pPool->numVertexes*sizeof(usedVertex_t));
+		V_memcpy(&pVertexList[numVertexes], pPool->pVertexList, pPool->numVertexes*sizeof(usedVertex_t));
 		numVertexes += pPool->numVertexes;
 	}
 
@@ -2806,7 +2819,7 @@ bool FixupVVDFile(const char *fileName,  const studiohdr_t *pStudioHdr, const vo
 	}
 
 	pStart_base = (byte*)malloc(FILEBUFFER);
-	memset(pStart_base, 0, FILEBUFFER);
+	V_memset(pStart_base, 0, FILEBUFFER);
 	pStart_new  = (byte*)ALIGN(pStart_base,16);
 	pData_new   = pStart_new;
 
@@ -2941,8 +2954,8 @@ bool FixupVVDFile(const char *fileName,  const studiohdr_t *pStudioHdr, const vo
 		// iterate sorted order, remap old vert location to new vert location
 		oldIndex = pVertexList[i].vertexOffset + pVertexList[i].meshVertID;
 		
-		memcpy(&pVertex_new[i], pFlatVertexes[oldIndex], sizeof(mstudiovertex_t));
-		memcpy(&pTangent_new[i], pFlatTangents[oldIndex], sizeof(Vector4D));
+		V_memcpy(&pVertex_new[i], pFlatVertexes[oldIndex], sizeof(mstudiovertex_t));
+		V_memcpy(&pTangent_new[i], pFlatTangents[oldIndex], sizeof(Vector4D));
 	}
 
 	// pFileHdr_new->length =  pData_new-pStart_new;
@@ -3157,29 +3170,29 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	int								i;
 	const char						*vtxPrefixes[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".xbox.vtx"};
 
-	strcpy( filename, gamedir );
+	V_strcpy_safe( filename, gamedir );
 //	if( *g_pPlatformName )
 //	{
-//		strcat( filename, "platform_" );
-//		strcat( filename, g_pPlatformName );
-//		strcat( filename, "/" );	
+//		V_strcat_safe( filename, "platform_" );
+//		V_strcat_safe( filename, g_pPlatformName );
+//		V_strcat_safe( filename, "/" );	
 //	}
-	strcat( filename, "models/" );	
-	strcat( filename, outname );
-	Q_StripExtension( filename, filename, sizeof( filename ) );
+	V_strcat_safe( filename, "models/" );	
+	V_strcat_safe( filename, outname );
+	V_StripExtension( filename, filename, sizeof( filename ) );
 
 	// determine lod usage per vertex
 	// all vtx files enumerate model's lod verts, but differ in their mesh makeup
 	// use xxx.dx80.vtx to establish which vertexes are used by each lod
-	strcpy( tmpFileName, filename );
+	V_strcpy_safe( tmpFileName, filename );
 	if ( !g_bXbox )
 	{
-		strcat( tmpFileName, ".dx80.vtx" );
+		V_strcat_safe( tmpFileName, ".dx80.vtx" );
 	}
 	else
 	{
 		// must use the target we are building for
-		strcat( tmpFileName, ".xbox.vtx" );
+		V_strcat_safe( tmpFileName, ".xbox.vtx" );
 	}
 	VtxLen = LoadFile( tmpFileName, &pVtxBuff );
 
@@ -3191,8 +3204,8 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	}
 
 	// fixup ???.vvd
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".vvd" );
+	V_strcpy_safe( tmpFileName, filename );
+	V_strcat_safe( tmpFileName, ".vvd" );
 	if (!FixupVVDFile(tmpFileName, pStudioHdr, pVtxBuff, pVertexPools, numVertexPools, pVertexList, numVertexes))
 	{
 		// data error
@@ -3202,8 +3215,8 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	for (i=0; i<ARRAYSIZE(vtxPrefixes); i++)
 	{
 		// fixup ???.vtx
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, vtxPrefixes[i] );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, vtxPrefixes[i] );
 		if (!FixupVTXFile(tmpFileName, pStudioHdr, pVertexPools, numVertexPools, pVertexList, numVertexes))
 		{
 			// data error
@@ -3212,8 +3225,8 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	}
 
 	// fixup ???.mdl
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".mdl" );
+	V_strcpy_safe( tmpFileName, filename );
+	V_strcat_safe( tmpFileName, ".mdl" );
 	if (!FixupMDLFile(tmpFileName, pStudioHdr, pVtxBuff, pVertexPools, numVertexPools, pVertexList, numVertexes))
 	{
 		// data error
@@ -3334,7 +3347,7 @@ bool Clamp_VVD_LODS( const char *fileName, int rootLOD )
 
 	int newLength = Studio_VertexDataSize( pTempVvdHdr, rootLOD, true );
 
-	// printf("was %d now %d\n", len, newLength );
+	// Msg("was %d now %d\n", len, newLength );
 
 	vertexFileHeader_t *pNewVvdHdr = (vertexFileHeader_t *)calloc( newLength, 1 );
 
@@ -3342,9 +3355,9 @@ bool Clamp_VVD_LODS( const char *fileName, int rootLOD )
 
 	if (!g_quiet)
 	{
-		printf ("---------------------\n");
-		printf ("writing %s:\n", fileName);
-		printf( "vertices   (%d vertices)\n", pNewVvdHdr->numLODVertexes[ 0 ] );
+		Msg ("---------------------\n");
+		Msg ("writing %s:\n", fileName);
+		Msg( "vertices   (%d vertices)\n", pNewVvdHdr->numLODVertexes[ 0 ] );
 	}
 
 	// pNewVvdHdr->length = newLength;
@@ -3476,7 +3489,7 @@ bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr 
 					pNewVtxMesh->stripGroupHeaderOffset = (pData - (byte *)pNewVtxMesh);
 					pData += pNewVtxMesh->numStripGroups * sizeof( OptimizedModel::StripGroupHeader_t );
 
-					// printf("part %d : model %d : lod %d : mesh %d : strips %d : offset %d\n", i, j, nLodID, k, pVtxMesh->numStripGroups, pVtxMesh->stripGroupHeaderOffset );
+					// Msg("part %d : model %d : lod %d : mesh %d : strips %d : offset %d\n", i, j, nLodID, k, pVtxMesh->numStripGroups, pVtxMesh->stripGroupHeaderOffset );
 
 					for (m = 0; m < pVtxMesh->numStripGroups; m++)
 					{
@@ -3488,13 +3501,13 @@ bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr 
 						pNewStripGroup->numVerts = pStripGroup->numVerts;
 						pNewStripGroup->vertOffset = (pData - (byte *)pNewStripGroup);
 						size = pNewStripGroup->numVerts * sizeof( OptimizedModel::Vertex_t );
-						memcpy( pData, pStripGroup->pVertex(0), size );
+						V_memcpy( pData, pStripGroup->pVertex(0), size );
 						pData += size;
 
 						pNewStripGroup->numIndices = pStripGroup->numIndices;
 						pNewStripGroup->indexOffset = (pData - (byte *)pNewStripGroup);
 						size = pNewStripGroup->numIndices * sizeof( unsigned short );
-						memcpy( pData, pStripGroup->pIndex(0), size );
+						V_memcpy( pData, pStripGroup->pIndex(0), size );
 						pData += size;
 
 						pNewStripGroup->numStrips = pStripGroup->numStrips;
@@ -3505,9 +3518,9 @@ bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr 
 						pNewStripGroup->flags = pStripGroup->flags;
 
 						/*
-						printf("\tnumVerts %d %d :\n", pStripGroup->numVerts, pStripGroup->vertOffset );
-						printf("\tnumIndices %d %d :\n", pStripGroup->numIndices, pStripGroup->indexOffset );
-						printf("\tnumStrips %d %d :\n", pStripGroup->numStrips, pStripGroup->stripOffset );
+						Msg("\tnumVerts %d %d :\n", pStripGroup->numVerts, pStripGroup->vertOffset );
+						Msg("\tnumIndices %d %d :\n", pStripGroup->numIndices, pStripGroup->indexOffset );
+						Msg("\tnumStrips %d %d :\n", pStripGroup->numStrips, pStripGroup->stripOffset );
 						*/
 
 						for (n = 0; n < pStripGroup->numStrips; n++)
@@ -3527,17 +3540,17 @@ bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr 
 							pNewStrip->numBoneStateChanges = pStrip->numBoneStateChanges;
 							pNewStrip->boneStateChangeOffset = (pData - (byte *)pNewStrip);
 							size = pNewStrip->numBoneStateChanges * sizeof( OptimizedModel::BoneStateChangeHeader_t );
-							memcpy( pData, pStrip->pBoneStateChange(0), size );
+							V_memcpy( pData, pStrip->pBoneStateChange(0), size );
 							pData += size;
 
 							/*
-							printf("\t\tnumIndices %d %d :\n", pNewStrip->numIndices, pNewStrip->indexOffset );
-							printf("\t\tnumVerts %d %d :\n", pNewStrip->numVerts, pNewStrip->vertOffset );
-							printf("\t\tnumBoneStateChanges %d %d :\n", pNewStrip->numBoneStateChanges, pNewStrip->boneStateChangeOffset );
+							Msg("\t\tnumIndices %d %d :\n", pNewStrip->numIndices, pNewStrip->indexOffset );
+							Msg("\t\tnumVerts %d %d :\n", pNewStrip->numVerts, pNewStrip->vertOffset );
+							Msg("\t\tnumBoneStateChanges %d %d :\n", pNewStrip->numBoneStateChanges, pNewStrip->boneStateChangeOffset );
 							*/
-							// printf("(%d)\n", delta );
+							// Msg("(%d)\n", delta );
 						}
-						// printf("(%d)\n", delta );
+						// Msg("(%d)\n", delta );
 					}
 				}
 			}
@@ -3569,14 +3582,14 @@ bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr 
 	}
 
 	int newLen = pData - (byte *)pNewVtxHdr;
-	// printf("len %d : %d\n", len, newLen );
+	// Msg("len %d : %d\n", len, newLen );
 
 	// pNewVtxHdr->length = newLen;
 
 	if (!g_quiet)
 	{
-		printf ("writing %s:\n", fileName);
-		printf( "everything (%d bytes)\n", newLen );
+		Msg ("writing %s:\n", fileName);
+		Msg( "everything (%d bytes)\n", newLen );
 	}
 	SaveFile( (char *)fileName, pNewVtxHdr, newLen );
 
@@ -3607,25 +3620,25 @@ bool Clamp_RootLOD( studiohdr_t *phdr )
 		return true;
 	}
 
-	strcpy( filename, gamedir );
-	strcat( filename, "models/" );	
-	strcat( filename, outname );
-	Q_StripExtension( filename, filename, sizeof( filename ) );
+	V_strcpy_safe( filename, gamedir );
+	V_strcat_safe( filename, "models/" );	
+	V_strcat_safe( filename, outname );
+	V_StripExtension( filename, filename, sizeof( filename ) );
 
 	// shift the files so that g_minLod is the root LOD
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".mdl" );
+	V_strcpy_safe( tmpFileName, filename );
+	V_strcat_safe( tmpFileName, ".mdl" );
 	Clamp_MDL_LODS( tmpFileName, rootLOD );
 
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".vvd" );
+	V_strcpy_safe( tmpFileName, filename );
+	V_strcat_safe( tmpFileName, ".vvd" );
 	Clamp_VVD_LODS( tmpFileName, rootLOD );
 
 	for (i=0; i<ARRAYSIZE(vtxPrefixes); i++)
 	{
 		// fixup ???.vtx
-		strcpy( tmpFileName, filename );
-		strcat( tmpFileName, vtxPrefixes[i] );
+		V_strcpy_safe( tmpFileName, filename );
+		V_strcat_safe( tmpFileName, vtxPrefixes[i] );
 		Clamp_VTX_LODS( tmpFileName, rootLOD, phdr );
 	}
 

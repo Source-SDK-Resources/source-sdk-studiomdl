@@ -82,14 +82,14 @@ ReadBmpFile(
 
 	// Set output parameters
 	*ppbPalette = (BYTE *)malloc(sizeof rgrgbPalette);
-	memcpy(*ppbPalette, rgrgbPalette, cbPalBytes);
+	V_memcpy(*ppbPalette, rgrgbPalette, cbPalBytes);
 	*ppbBits = pbBmpBits;
 
 
     *pwidth = bmih.biWidth;
     *pheight = bmih.biHeight;
 
-	printf("w %d h %d s %d\n",bmih.biWidth, bmih.biHeight, cbBmpBits );
+	Msg("w %d h %d s %d\n",bmih.biWidth, bmih.biHeight, cbBmpBits );
 
 GetOut:
 	if (pfile) fclose(pfile);

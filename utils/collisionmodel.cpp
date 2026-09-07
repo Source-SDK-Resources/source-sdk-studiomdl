@@ -48,7 +48,7 @@ class CPhysCollisionModel
 public:
 	CPhysCollisionModel( void )
 	{
-		memset( this, 0, sizeof(*this) );
+		V_memset( this, 0, sizeof(*this) );
 	}
 
 	const char	*m_parent;
@@ -133,7 +133,7 @@ int FindLocalBoneNamed( const s_source_t *pSource, const char *pName )
 		int i;
 		for ( i = 0; i < pSource->numbones; i++ )
 		{
-			if ( !stricmp( pName, pSource->localBone[i].name ) )
+			if ( !V_stricmp( pName, pSource->localBone[i].name ) )
 				return i;
 		}
 
@@ -141,7 +141,7 @@ int FindLocalBoneNamed( const s_source_t *pSource, const char *pName )
 
 		for ( i = 0; i < pSource->numbones; i++ )
 		{
-			if ( !stricmp( pName, pSource->localBone[i].name ) )
+			if ( !V_stricmp( pName, pSource->localBone[i].name ) )
 				return i;
 		}
 	}
@@ -223,10 +223,10 @@ public:
 
 	void AddText( const char *pText )
 	{
-		int len = strlen(pText);
+		int len = V_strlen(pText);
 		int count = m_textCommands.Size();
 		m_textCommands.AddMultipleToTail( len );
-		memcpy( m_textCommands.Base() + count, pText, len );
+		V_memcpy( m_textCommands.Base() + count, pText, len );
 	}
 	void ComputeMass( void );
 
@@ -251,7 +251,7 @@ CJointedModel::CJointedModel( void )
 	m_pCollisionPairs = NULL;
 	m_totalMass = 1.0;
 
-	memset( m_bonemap, 0, sizeof(m_bonemap) );
+	V_memset( m_bonemap, 0, sizeof(m_bonemap) );
 	m_pConstraintList = NULL;
 	m_constraintCount = 0;
 	
@@ -342,7 +342,7 @@ int CJointedModel::BoneIndex( const char *pName )
 	pName = RenameBone( pName );
 	for ( int boneIndex = 0; boneIndex < m_pModel->numbones; boneIndex++ )
 	{
-		if ( !stricmp( m_pModel->localBone[boneIndex].name, pName ) )
+		if ( !V_stricmp( m_pModel->localBone[boneIndex].name, pName ) )
 			return boneIndex;
 	}
 
@@ -396,7 +396,7 @@ int CJointedModel::CollisionIndex( const char *pName )
 	int index = 0;
 	while ( pList )
 	{
-		if ( !stricmp( pName, pList->m_name ) )
+		if ( !V_stricmp( pName, pList->m_name ) )
 			return index;
 		
 		pList = pList->m_pNext;
@@ -450,7 +450,7 @@ void CJointedModel::SortCollisionList( void )
 				if ( j == i )
 					continue;
 
-				if ( !stricmp( pPhys->m_parent, pArray[j]->m_name ) )
+				if ( !V_stricmp( pPhys->m_parent, pArray[j]->m_name ) )
 					break;
 			}
 
@@ -524,7 +524,7 @@ CPhysCollisionModel *CJointedModel::GetCollisionModel( const char *pName )
 	CPhysCollisionModel *pList = m_pCollisionList;
 	while ( pList )
 	{
-		if ( !stricmp( pName, pList->m_name ) )
+		if ( !V_stricmp( pName, pList->m_name ) )
 			return pList;
 		
 		pList = pList->m_pNext;
@@ -617,7 +617,7 @@ void CJointedModel::ComputeMass( void )
 
 	if( !g_quiet )
 	{
-		printf("Computed Mass: %.2f kg\n", m_totalMass );
+		Msg("Computed Mass: %.2f kg\n", m_totalMass );
 	}
 }
 
@@ -1054,7 +1054,7 @@ CPhysCollisionModel *FindObjectInList( CPhysCollisionModel *pHead, const char *p
 {
 	while ( pHead )
 	{
-		if ( !stricmp( pName, pHead->m_name ) )
+		if ( !V_stricmp( pName, pHead->m_name ) )
 			break;
 		pHead = pHead->m_pNext;
 	}
@@ -1241,7 +1241,7 @@ int ProcessJointedModel( CJointedModel &joints )
 
 	if( !g_quiet )
 	{
-		printf("Processing jointed collision model\n" );
+		Msg("Processing jointed collision model\n" );
 	}
 	// loop through each bone and form a convex element
 	for ( int boneIndex = 0; boneIndex < joints.m_pModel->numbones; boneIndex++ )
@@ -1253,7 +1253,7 @@ int ProcessJointedModel( CJointedModel &joints )
 		ConvertToBoneSpace( joints.m_pModel, boneIndex, boneVerts );
 		vertCount = CopyFaceVertsByBone( verts, boneVerts, joints, boneIndex );
 		//vertCount = CopyVertsByBone( verts, boneVerts, joints, boneIndex );
-//		printf("Bone %s has %d verts\n", joints.m_pModel->localBone[boneIndex].name, vertCount );
+//		Msg("Bone %s has %d verts\n", joints.m_pModel->localBone[boneIndex].name, vertCount );
 		// if verts were attached to this bone, build a convex element from those verts
 		if ( vertCount )
 		{
@@ -1268,7 +1268,7 @@ int ProcessJointedModel( CJointedModel &joints )
 
 				// THIS DESTROYS pConvex!!
 				boundingvolume_t boundingVolume;
-				memset( &boundingVolume, 0, sizeof(boundingVolume) );
+				V_memset( &boundingVolume, 0, sizeof(boundingVolume) );
 				ClearBounds( boundingVolume.mins, boundingVolume.maxs );
 				for ( int i = 0; i < vertCount; i++ )
 				{
@@ -1291,7 +1291,7 @@ int ProcessJointedModel( CJointedModel &joints )
 
 				if( !g_quiet )
 				{
-					printf("%-24s (%3d verts) volume: %4.2f\n", pPhys->m_name, vertCount, pPhys->m_volume );
+					Msg("%-24s (%3d verts) volume: %4.2f\n", pPhys->m_name, vertCount, pPhys->m_volume );
 				}
 				joints.UnlinkCollisionModel( pPhys );
 				joints.AppendCollisionModel( pPhys );
@@ -1441,7 +1441,7 @@ int ProcessSingleBody( CJointedModel &joints )
 	int vertCount;
 	int i;
 
-	memset( vertID, 0, sizeof(int)*pmodel->numvertices);
+	V_memset( vertID, 0, sizeof(int)*pmodel->numvertices);
 
 	//	DumpToGLView( "gl.txt", pmodel, worldVerts, vertID );
 
@@ -1502,7 +1502,7 @@ int ProcessSingleBody( CJointedModel &joints )
 				MdlWarning("Bad collision model, check your smoothing groups!!!\n" );
 				if (!g_quiet)
 				{
-					printf("\07" );
+					Msg("\07" );
 				}
 				MdlWarning("Truncating model!!!!\n" );
 				MdlWarning( "%s has bad smoothing groups\n", pmodel->filename );
@@ -1552,7 +1552,7 @@ int ProcessSingleBody( CJointedModel &joints )
 
 		if( !g_quiet )
 		{
-			printf("Model has %d convex sub-parts\n", elements.Size() );
+			Msg("Model has %d convex sub-parts\n", elements.Size() );
 		}
 	
 		CPhysCollisionModel *pPhys = new CPhysCollisionModel;
@@ -1563,11 +1563,11 @@ int ProcessSingleBody( CJointedModel &joints )
 		// Init mass, write routine will distribute the total mass
 		pPhys->m_mass = 1.0;
 		char tmp[512];
-		Q_FileBase( pmodel->filename, tmp, sizeof( tmp ) );
+		V_FileBase( pmodel->filename, tmp, sizeof( tmp ) );
 		
 		// UNDONE: Memory leak
-		char *out = new char[strlen(tmp)+1];
-		strcpy( out, tmp );
+		char *out = new char[V_strlen(tmp)+1];
+		V_strcpy( out, tmp );
 		pPhys->m_name = out;
 		pPhys->m_parent = NULL;
 
@@ -1604,7 +1604,7 @@ int ReadArgs( char pArgs[][ARG_SIZE], int maxCount )
 	while ( argCount < maxCount && TokenAvailable() )
 	{
 		GetToken(false);
-		strncpy( pArgs[argCount], token, ARG_SIZE );
+		V_strncpy( pArgs[argCount], token, ARG_SIZE );
 		argCount++;
 	}
 
@@ -1674,15 +1674,15 @@ void CCmd_JointConstrain( CJointedModel &joints, const char *pJointName, const c
 	}
 
 	jointlimit_t jointType = JOINT_FREE;
-	if ( !stricmp( pJointType, "free" ) )
+	if ( !V_stricmp( pJointType, "free" ) )
 	{
 		jointType = JOINT_FREE;
 	}
-	else if ( !stricmp( pJointType, "fixed" ) )
+	else if ( !V_stricmp( pJointType, "fixed" ) )
 	{
 		jointType = JOINT_FIXED;
 	}
-	else if ( !stricmp( pJointType, "limit" ) )
+	else if ( !V_stricmp( pJointType, "limit" ) )
 	{
 		jointType = JOINT_LIMIT;
 	}
@@ -1711,7 +1711,7 @@ void CCmd_JointSkip( CJointedModel &joints, const char *pName )
 	}
 	else
 	{
-//			printf("skipping joint %s\n", pName );
+//			Msg("skipping joint %s\n", pName );
 		joints.SkipBone( boneIndex );
 	}
 }
@@ -1745,7 +1745,7 @@ void CCmd_JointMerge( CJointedModel &joints, const char *pParent, const char *pC
 void CCmd_JointRoot( CJointedModel &joints, const char *pBone )
 {
 	// save the root bone name
-	strcpy( joints.m_rootName, pBone );
+	V_strcpy_safe( joints.m_rootName, pBone );
 }
 
 
@@ -1773,52 +1773,52 @@ void ParseCollisionCommands( CJointedModel &joints )
 
 	while( GetToken( true ) )
 	{
-		if ( !strcmp( token, "}" ) )
+		if ( !V_strcmp( token, "}" ) )
 			return;
 
-		strcpy( command, token );
+		V_strcpy_safe( command, token );
 
-		if ( !stricmp( command, "$mass" ) )
+		if ( !V_stricmp( command, "$mass" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			CCmd_TotalMass( joints, args[0] );
 		}
 		// default properties
-		else if ( !stricmp( command, "$automass" ) )
+		else if ( !V_stricmp( command, "$automass" ) )
 		{
 			joints.SetAutoMass();
 		}
-		else if ( !stricmp( command, "$inertia" ) )
+		else if ( !V_stricmp( command, "$inertia" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			joints.DefaultInertia( Safe_atof( args[0] ) );
 		}
-		else if ( !stricmp( command, "$damping" ) )
+		else if ( !V_stricmp( command, "$damping" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			joints.DefaultDamping( Safe_atof( args[0] ) );
 		}
-		else if ( !stricmp( command, "$rotdamping" ) )
+		else if ( !V_stricmp( command, "$rotdamping" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			joints.DefaultRotdamping( Safe_atof( args[0] ) );
 		}
-		else if ( !stricmp( command, "$drag" ) )
+		else if ( !V_stricmp( command, "$drag" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			joints.DefaultDrag( Safe_atof( args[0] ) );
 		}
-		else if ( !stricmp( command, "$rollingDrag" ) )
+		else if ( !V_stricmp( command, "$rollingDrag" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			// JAY: Removed this in favor of heuristic/tuning approach
 			//joints.DefaultRollingDrag( Safe_atof( args[0] ) );
 		}
-		else if ( !stricmp( command, "$concave" ) )
+		else if ( !V_stricmp( command, "$concave" ) )
 		{
 			joints.AllowConcave();
 		}
-		else if ( !stricmp( command, "$masscenter" ) )
+		else if ( !V_stricmp( command, "$masscenter" ) )
 		{
 			argCount = ReadArgs( args, 3 );
 			Vector center;
@@ -1826,22 +1826,22 @@ void ParseCollisionCommands( CJointedModel &joints )
 			joints.ForceMassCenter( center );
 		}
 		// joint commands
-		else if ( !stricmp( command, "$jointskip" ) )
+		else if ( !V_stricmp( command, "$jointskip" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			CCmd_JointSkip( joints, args[0] );
 		}
-		else if ( !stricmp( command, "$jointmerge" ) )
+		else if ( !V_stricmp( command, "$jointmerge" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			CCmd_JointMerge( joints, args[0], args[1] );
 		}
-		else if ( !stricmp( command, "$rootbone" ) )
+		else if ( !V_stricmp( command, "$rootbone" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			CCmd_JointRoot( joints, args[0] );
 		}
-		else if ( !stricmp( command, "$jointconstrain" ) )
+		else if ( !V_stricmp( command, "$jointconstrain" ) )
 		{
 			argCount = ReadArgs( args, 6 );
 			char *pFriction = args[5];
@@ -1852,36 +1852,36 @@ void ParseCollisionCommands( CJointedModel &joints )
 			CCmd_JointConstrain( joints, args[0], args[1], args[2], args[3], args[4], pFriction );
 		}
 		// joint properties
-		else if ( !stricmp( command, "$jointinertia" ) )
+		else if ( !V_stricmp( command, "$jointinertia" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			joints.JointInertia( args[0], Safe_atof( args[1] ) );
 		}
-		else if ( !stricmp( command, "$jointdamping" ) )
+		else if ( !V_stricmp( command, "$jointdamping" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			joints.JointDamping( args[0], Safe_atof( args[1] ) );
 		}
-		else if ( !stricmp( command, "$jointrotdamping" ) )
+		else if ( !V_stricmp( command, "$jointrotdamping" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			joints.JointRotdamping( args[0], Safe_atof( args[1] ) );
 		}
-		else if ( !stricmp( command, "$jointmassbias" ) )
+		else if ( !V_stricmp( command, "$jointmassbias" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			joints.JointMassBias( args[0], Safe_atof( args[1] ) );
 		}
-		else if ( !stricmp( command, "$noselfcollisions" ) )
+		else if ( !V_stricmp( command, "$noselfcollisions" ) )
 		{
 			joints.SetNoSelfCollisions();
 		}
-		else if ( !stricmp( command, "$jointcollide" ) )
+		else if ( !V_stricmp( command, "$jointcollide" ) )
 		{
 			argCount = ReadArgs( args, 2 );
 			joints.AppendCollisionPair( args[0], args[1] );
 		}
-		else if ( !stricmp( command, "$animatedfriction" ) )
+		else if ( !V_stricmp( command, "$animatedfriction" ) )
 		{
 			argCount = ReadArgs( args, 5 );
 
@@ -1911,14 +1911,14 @@ void Cmd_CollisionText( void )
 
 	while ( GetToken(true) )
 	{
-		if ( !strcmp( token, "}" ) )
+		if ( !V_strcmp( token, "}" ) )
 		{
 			level--;
 			if ( level <= 0 )
 				break;
 			g_JointedModel.AddText( " }\n" );
 		}
-		else if ( !strcmp( token, "{" ) )
+		else if ( !V_strcmp( token, "{" ) )
 		{
 			g_JointedModel.AddText( "{" );
 			level++;
@@ -1976,7 +1976,7 @@ void LoadSurfacePropsAll()
 	{
 		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
 		{
-			if ( !Q_stricmp( sub->GetName(), "file" ) )
+			if ( !V_stricmp( sub->GetName(), "file" ) )
 			{
 				// Add
 				LoadSurfaceProps( sub->GetString() );
@@ -2002,7 +2002,7 @@ int DoCollisionModel( bool separateJoints )
 	// name
 	if (!GetToken(false)) return 0;
 
-	strcpyn( name, token );
+	V_strcpyn( name, token );
 
 	PhysicsDLLPath( "VPHYSICS.DLL" );
 
@@ -2038,7 +2038,7 @@ int DoCollisionModel( bool separateJoints )
 	// If the next token is a { that means a data block for the collision model
 	if (GetToken(true))
 	{
-		if ( !strcmp( token, "{" ) )
+		if ( !V_strcmp( token, "{" ) )
 		{
 			parseCommands = true;
 		}
@@ -2207,14 +2207,14 @@ void CollisionModel_Build( void )
 	FixCollisionHierarchy( g_JointedModel );
 	if( !g_quiet )
 	{
-		printf("Collision model completed.\n" );
+		Msg("Collision model completed.\n" );
 	}
 	g_JointedModel.ComputeMass();
 }
 
 void BuildRagdollConstraint( CPhysCollisionModel *pPhys, constraint_ragdollparams_t &ragdoll )
 {
-	memset( &ragdoll, 0, sizeof(ragdoll) );
+	V_memset( &ragdoll, 0, sizeof(ragdoll) );
 	ragdoll.parentIndex = g_JointedModel.CollisionIndex(pPhys->m_parent);
 	ragdoll.childIndex = g_JointedModel.CollisionIndex(pPhys->m_name);
 	if ( ragdoll.parentIndex < 0 || ragdoll.childIndex < 0 )
@@ -2235,7 +2235,7 @@ void BuildRagdollConstraint( CPhysCollisionModel *pPhys, constraint_ragdollparam
 		{
 			MdlError("Rotation constraint on bone \"%s\" which does not appear in collision model!!!\n", pList->m_pJointName );
 		}
-		else if ( (!pListModel->m_parent || g_JointedModel.CollisionIndex(pListModel->m_parent) < 0) && stricmp( pList->m_pJointName, g_JointedModel.m_rootName ) )
+		else if ( (!pListModel->m_parent || g_JointedModel.CollisionIndex(pListModel->m_parent) < 0) && V_stricmp( pList->m_pJointName, g_JointedModel.m_rootName ) )
 		{
 			MdlError("Rotation constraint on bone \"%s\" which has no parent!!!\n", pList->m_pJointName );
 		}
@@ -2297,25 +2297,25 @@ void CollisionModel_Write( long checkSum )
 
 		char filename[512];
 
-		strcpy( filename, gamedir );
+		V_strcpy_safe( filename, gamedir );
 //		if( *g_pPlatformName )
 //		{
-//			strcat( filename, "platform_" );
-//			strcat( filename, g_pPlatformName );
-//			strcat( filename, "/" );	
+//			V_strcat_safe( filename, "platform_" );
+//			V_strcat_safe( filename, g_pPlatformName );
+//			V_strcat_safe( filename, "/" );	
 //		}
-		strcat( filename, "models/" );	
-		strcat( filename, outname );	
+		V_strcat_safe( filename, "models/" );	
+		V_strcat_safe( filename, outname );	
 
 		float volume = TotalVolume( pPhys );
 		if ( volume <= 0 )
 			volume = 1;
 		if( !g_quiet )
 		{
-			printf("Collision model volume %.2f in^3\n", volume );
+			Msg("Collision model volume %.2f in^3\n", volume );
 		}
 
-		Q_SetExtension( filename, ".phy", sizeof( filename ) );
+		V_SetExtension( filename, ".phy", sizeof( filename ) );
 		FILE *fp = fopen( filename, "wb" );
 		if ( fp )
 		{
@@ -2468,7 +2468,7 @@ void CollisionModel_Write( long checkSum )
 			for ( int k = 0; k < g_JointedModel.m_mergeList.Count(); k++ )
 			{
 				char buf[512];
-				Q_snprintf( buf, sizeof(buf), "%s,%s", g_JointedModel.m_mergeList[k].pParent, g_JointedModel.m_mergeList[k].pChild );
+				V_snprintf( buf, sizeof(buf), "%s,%s", g_JointedModel.m_mergeList[k].pParent, g_JointedModel.m_mergeList[k].pChild );
 				KeyWriteString( fp, "jointmerge", buf );
 			}
 

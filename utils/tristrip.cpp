@@ -229,7 +229,7 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 		peak[i] = pmesh->numtris;
 	}
 
-	// printf("finding neighbors\n");
+	// Msg("finding neighbors\n");
 	for (i=0 ; i<pmesh->numtris; i++)
 	{
 		for (k = 0; k < 3; k++)
@@ -239,16 +239,16 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 
 			FindNeighbor( i, k );
 		}
-		// printf("%d", used[i] );
+		// Msg("%d", used[i] );
 	}
-	// printf("\n");
+	// Msg("\n");
 
 	//
 	// build tristrips
 	//
 	numcommandnodes = 0;
 	numcommands = 0;
-	memset (used, 0, sizeof(used));
+	V_memset (used, 0, sizeof(used));
 
 	for (i=0 ; i<pmesh->numtris ;)
 	{
@@ -294,7 +294,7 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 							besttris[j] = striptris[j];
 							bestverts[j] = stripverts[j];
 						}
-						// printf("%d %d\n", k, bestlen );
+						// Msg("%d %d\n", k, bestlen );
 					}
 					if (len > localpeak)
 						localpeak = len;
@@ -306,7 +306,7 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 		}
 		total += (bestlen - 2);
 
-		// printf("%d (%d) %d\n", bestlen, pmesh->numtris - total, i );
+		// Msg("%d (%d) %d\n", bestlen, pmesh->numtris - total, i );
 
 		maxlen = bestlen;
 
@@ -330,12 +330,12 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 			commands[numcommands++] = tri->s;
 			commands[numcommands++] = tri->t;
 		}
-		// printf("%d ", bestlen - 2 );
+		// Msg("%d ", bestlen - 2 );
 		numcommandnodes++;
 
 		if (t != time(NULL))
 		{
-			printf("%2d%%\r", (total * 100) / pmesh->numtris );
+			Msg("%2d%%\r", (total * 100) / pmesh->numtris );
 			t = time(NULL);
 		}
 	}
@@ -344,7 +344,7 @@ int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata )
 
 	*ppdata = (byte *)commands;
 
-	// printf("%d %d %d\n", numcommandnodes, numcommands, pmesh->numtris  );
+	// Msg("%d %d %d\n", numcommandnodes, numcommands, pmesh->numtris  );
 	return numcommands * sizeof( short );
 }
 

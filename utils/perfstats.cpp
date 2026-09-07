@@ -56,7 +56,11 @@ Cache model's specified dynamic data
 vertexFileHeader_t *CStudioDataCache::CacheVertexData( studiohdr_t *pStudioHdr )
 {
 	// minimal implementation - return persisted data
+#ifdef PLATFORM_64BITS
 	return (vertexFileHeader_t*)pStudioHdr->VertexBase();
+#else
+	return (vertexFileHeader_t*)pStudioHdr->pVertexBase;
+#endif // PLATFORM_64BITS
 }
 
 void InitStudioRender( void )
@@ -87,7 +91,7 @@ void InitStudioRender( void )
 
 static void UpdateStudioRenderConfig( void )
 {
-	memset( &s_StudioRenderConfig, 0, sizeof(s_StudioRenderConfig) );
+	V_memset( &s_StudioRenderConfig, 0, sizeof(s_StudioRenderConfig) );
 
 	s_StudioRenderConfig.bEyeMove = true;
 	s_StudioRenderConfig.fEyeShiftX = 0.0f;
@@ -148,8 +152,8 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 	InitStudioRender();
 
 	// persist the vvd data
-	Q_StripExtension( pFilename, fileName, sizeof( fileName ) );
-	strcat( fileName, ".vvd" );
+	V_StripExtension( pFilename, fileName, sizeof( fileName ) );
+	V_strcat_safe( fileName, ".vvd" );
 
 	if (FileExists( fileName ))
 	{
@@ -196,12 +200,12 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 	for (int j=0; j<sizeof(prefix)/sizeof(prefix[0]); j++)
 	{
 		// make vtx filename
-		Q_StripExtension( pFilename, fileName, sizeof( fileName ) );
-		strcat( fileName, prefix[j] );
+		V_StripExtension( pFilename, fileName, sizeof( fileName ) );
+		V_strcat_safe( fileName, prefix[j] );
 
-		printf( "\n" );
-		printf( "Performance Stats: %s\n", fileName );
-		printf( "------------------\n" );
+		Msg( "\n" );
+		Msg( "Performance Stats: %s\n", fileName );
+		Msg( "------------------\n" );
 
 		// persist the vtx data
 		if (FileExists(fileName))
@@ -224,22 +228,28 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		}
 
 		// studio render will request these through cache interface
+#ifdef PLATFORM_64BITS
 		pStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVvdHdr;
 		pStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVtxHdr;
+#else
+		pStudioHdr->pVertexBase = (void*)pVvdHdr;
+		pStudioHdr->pIndexBase = (void*)pVtxHdr;
+#endif // PLATFORM_64BITS
+
 
 		g_pStudioRender->LoadModel( pStudioHdr, pVtxHdr, &studioHWData );
-		memset( &drawModelInfo, 0, sizeof( DrawModelInfo_t ) );
+		V_memset( &drawModelInfo, 0, sizeof( DrawModelInfo_t ) );
 		drawModelInfo.m_pStudioHdr = pStudioHdr;
 		drawModelInfo.m_pHardwareData = &studioHWData;	
 		int i;
 		for( i = studioHWData.m_RootLOD; i < studioHWData.m_NumLODs; i++ )
 		{
-			printf( "LOD: %d\n", i );
+			Msg( "LOD: %d\n", i );
 			drawModelInfo.m_Lod = i;
 			DrawModelResults_t statsOutput;
 			g_pStudioRender->GetPerfStats( &statsOutput, drawModelInfo );
-			printf( "\tactual tris: %d\n", ( int )statsOutput.m_ActualTriCount );
-			printf( "\ttexture memory bytes: %d\n", ( int )statsOutput.m_TextureMemoryBytes );
+			Msg( "\tactual tris: %d\n", ( int )statsOutput.m_ActualTriCount );
+			Msg( "\ttexture memory bytes: %d\n", ( int )statsOutput.m_TextureMemoryBytes );
 		}
 		g_pStudioRender->UnloadModel( &studioHWData );
 		free(pVtxHdr);
