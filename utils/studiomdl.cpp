@@ -322,14 +322,21 @@ void MdlExceptionFilter( unsigned long code )
 */
 
 int k_memtotal;
-void *kalloc( int num, int size )
+void* kalloc(int num, int size)
 {
-	// printf( "calloc( %d, %d )\n", num, size );
-	// printf( "%d ", num * size );
 	k_memtotal += num * size;
-	// ensure memory alignment on maximum of ALIGN
-	void *ptr = calloc( num, size + 511 );
-	ptr = (byte *)((int)((byte *)ptr + 511) & ~ 511);
+
+#ifdef PLATFORM_64BITS
+	// _aligned_malloc gives you a pointer that's already aligned —
+	// no manual mask-the-pointer trick needed on this path.
+	void* ptr = _aligned_malloc((size_t)num * size, 512);
+	if (!ptr)
+		return NULL;
+	memset(ptr, 0, (size_t)num * size);   // _aligned_malloc doesn't zero, calloc did
+#else
+	void* ptr = calloc(num, size + 511);
+	ptr = (byte*)(((uintptr_t)ptr + 511) & ~(uintptr_t)511);
+#endif
 	return ptr;
 }
 

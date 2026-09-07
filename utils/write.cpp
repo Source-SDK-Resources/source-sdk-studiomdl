@@ -60,11 +60,11 @@ static byte *pBlockStart;
 
 #undef ALIGN16
 #undef ALIGN32
-#define ALIGN4( a ) a = (byte *)((int)((byte *)a + 3) & ~ 3)
-#define ALIGN16( a ) a = (byte *)((int)((byte *)a + 15) & ~ 15)
-#define ALIGN32( a ) a = (byte *)((int)((byte *)a + 31) & ~ 31)
-#define ALIGN64( a ) a = (byte *)((int)((byte *)a + 63) & ~ 63)
-#define ALIGN512( a ) a = (byte *)((int)((byte *)a + 511) & ~ 511)
+#define ALIGN4( a ) a = (byte *)((intptr_t)((byte *)a + 3) & ~ 3)
+#define ALIGN16( a ) a = (byte *)((intptr_t)((byte *)a + 15) & ~ 15)
+#define ALIGN32( a ) a = (byte *)((intptr_t)((byte *)a + 31) & ~ 31)
+#define ALIGN64( a ) a = (byte *)((intptr_t)((byte *)a + 63) & ~ 63)
+#define ALIGN512( a ) a = (byte *)((intptr_t)((byte *)a + 511) & ~ 511)
 // make sure kalloc aligns to maximum alignment size
 
 #define FILEBUFFER (8 * 1024 * 1024)
@@ -711,9 +711,9 @@ const vertexFileHeader_t * mstudiomodel_t::CacheVertexData( void *pModelData )
 	studiohdr_t *pActiveStudioHdr = static_cast<studiohdr_t *>(pModelData);
 	Assert( pActiveStudioHdr );
 
-	if ( pActiveStudioHdr->pVertexBase )
+	if ( pActiveStudioHdr->VertexBase() )
 	{
-		return (vertexFileHeader_t *)pActiveStudioHdr->pVertexBase;
+		return (vertexFileHeader_t *)pActiveStudioHdr->VertexBase();
 	}
 
 	// mandatory callback to make requested data resident
@@ -772,7 +772,7 @@ const vertexFileHeader_t * mstudiomodel_t::CacheVertexData( void *pModelData )
 	free( pVvdHdr );
 	pVvdHdr = pNewVvdHdr;
 
-	pActiveStudioHdr->pVertexBase = (void*)pVvdHdr;
+	pActiveStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVvdHdr;
 	return pVvdHdr;
 }
 
@@ -2339,7 +2339,7 @@ typedef struct
 	lodMeshInfo_t	lodMeshInfo;
 } vertexPool_t;
 
-#define ALIGN(b,s)		(((unsigned int)(b)+(s)-1)&~((s)-1))
+#define ALIGN(b,s)		(((uintptr_t)(b)+(s)-1)&~((s)-1))
 
 //-----------------------------------------------------------------------------
 // FindVertexOffsets

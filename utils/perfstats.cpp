@@ -56,7 +56,7 @@ Cache model's specified dynamic data
 vertexFileHeader_t *CStudioDataCache::CacheVertexData( studiohdr_t *pStudioHdr )
 {
 	// minimal implementation - return persisted data
-	return (vertexFileHeader_t*)pStudioHdr->pVertexBase;
+	return (vertexFileHeader_t*)pStudioHdr->VertexBase();
 }
 
 void InitStudioRender( void )
@@ -224,8 +224,8 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		}
 
 		// studio render will request these through cache interface
-		pStudioHdr->pVertexBase = (void *)pVvdHdr;
-		pStudioHdr->pIndexBase  = (void *)pVtxHdr;
+		pStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVvdHdr;
+		pStudioHdr->pStudioHdr2()->pVertexBase = (void*)pVtxHdr;
 
 		g_pStudioRender->LoadModel( pStudioHdr, pVtxHdr, &studioHWData );
 		memset( &drawModelInfo, 0, sizeof( DrawModelInfo_t ) );
