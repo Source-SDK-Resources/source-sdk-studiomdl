@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,7 +34,7 @@ bool IsEnd( char const* pLine )
 {
 	if (strncmp( "end", pLine, 3 ) != 0) 
 		return false;
-	return (pLine[3] == '\0') || (pLine[3] == '\n');
+	return (pLine[3] == '\0') || (pLine[3] == '\n') || (pLine[3] == '\r' && pLine[4] == '\n');
 }
 
 

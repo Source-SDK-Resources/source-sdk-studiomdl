@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Builds physics collision models from studio model source
 //
@@ -30,8 +30,8 @@
 #include "phyfile.h"
 #include "utlvector.h"
 #include "vcollide_parse.h"
-#include "vstdlib/strtools.h"
-#include "keyvalues.h"
+#include "strtools.h"
+#include "KeyValues.h"
 
 // these functions just wrap atoi/atof and check for NULL
 static float Safe_atof( const char *pString );
@@ -1015,10 +1015,10 @@ void MarkConnectedMeshes( int *vertID, s_source_t *pmodel, int *vertMap )
 				globalFace.c = vertMap[globalFace.c];
 
 
-				// find min(faceid, vertID[a], vertID[b], vertID[c]);
-				int newid = min(faceid, vertID[globalFace.a]);
-				newid = min( newid, vertID[globalFace.b]);
-				newid = min( newid, vertID[globalFace.c]);
+				// find Min(faceid, vertID[a], vertID[b], vertID[c]);
+				int newid = Min(faceid, vertID[globalFace.a]);
+				newid = Min( newid, vertID[globalFace.b]);
+				newid = Min( newid, vertID[globalFace.c]);
 				
 				// mark all verts with the minimum, count the number we had to mark
 				if ( vertID[globalFace.a] != newid )
@@ -2274,7 +2274,7 @@ void CollisionModel_ExpandBBox( Vector &mins, Vector &maxs )
 	{
 		Vector collideMins, collideMaxs;
 
-		physcollision->CollideGetAABB( collideMins, collideMaxs, g_JointedModel.m_pCollisionList->m_pCollisionData, vec3_origin, vec3_angle );
+		physcollision->CollideGetAABB( &collideMins, &collideMaxs, g_JointedModel.m_pCollisionList->m_pCollisionData, vec3_origin, vec3_angle );
 		
 		// add the 0.25 inch collision separation as well
 		const float radius = 0.25;

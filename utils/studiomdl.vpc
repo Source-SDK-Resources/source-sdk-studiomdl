@@ -1,0 +1,67 @@
+//-----------------------------------------------------------------------------
+//	STUDIOMDL.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro OUTBINDIR	"$SRCDIR\..\game\bin"
+
+$Include "$SRCDIR\vpc_scripts\source_exe_con_base.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories		"$BASE;$SRCDIR/public/tier1;$SRCDIR/public/mathlib;$SRCDIR/utils/common;$SRCDIR/utils/nvtristriplib"
+	}
+}
+
+$Project "studiomdl"
+{
+	$Folder	"Source Files"
+	{
+		$File	"$SRCDIR/public/bone_setup.cpp"
+		$File	"$SRCDIR/public/collisionutils.cpp"
+		$File	"$SRCDIR/public/filesystem_helpers.cpp"
+		$File	"$SRCDIR/public/filesystem_init.cpp"
+		$File	"$SRCDIR/public/studio.cpp"
+		$File	"$SRCDIR/utils/common/cmdlib.cpp"
+		$File	"$SRCDIR/utils/common/filesystem_tools.cpp"
+		$File	"$SRCDIR/utils/common/mstristrip.cpp"
+		$File	"$SRCDIR/utils/common/physdll.cpp"
+		$File	"$SRCDIR/utils/common/scriplib.cpp"
+		
+		$File	"collisionmodel.cpp"
+		$File	"hardwarematrixstate.cpp"
+		$File	"hardwarevertexcache.cpp"
+		$File	"matsys.cpp"
+		$File	"mrmsupport.cpp"
+		$File	"objsupport.cpp"
+		$File	"optimize.cpp"
+		$File	"perfstats.cpp"
+		$File	"simplify.cpp"
+		$File	"studiomdl.cpp"
+		$File	"unifylods.cpp"
+		$File	"v1support.cpp"
+		$File	"write.cpp"
+	}
+
+	$Folder	"Header Files"
+	{
+		$File	"collisionmodel.h"
+		$File	"hardwarematrixstate.h"
+		$File	"hardwarevertexcache.h"
+		$File	"matsys.h"
+		$File	"perfstats.h"
+		$File	"studiomdl.h"
+	}
+
+	$Folder	"Link Libraries"
+	{
+		$Lib mathlib
+		$Lib nvtristrip
+		$Lib tier1
+		$Lib tier2
+	}
+}

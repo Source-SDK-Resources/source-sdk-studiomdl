@@ -1,17 +1,20 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
+#ifdef _WIN32
 #include <windows.h>
-#include "HardwareMatrixState.h"
+#endif
+#include "hardwarematrixstate.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "studio.h"
 #include "studiomdl.h"
+#include "cmdlib.h"
 
 CHardwareMatrixState::CHardwareMatrixState()
 {

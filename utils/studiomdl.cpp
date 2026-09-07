@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,7 +17,9 @@
 #pragma warning( disable : 4237 )
 #pragma warning( disable : 4305 )
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,9 +36,9 @@
 #include "studiomdl.h"
 #include "collisionmodel.h"
 #include "optimize.h"
-#include "vstdlib/strtools.h"
+#include "strtools.h"
 #include "bspflags.h"
-#include "vstdlib/icommandline.h"
+#include "icommandline.h"
 #include "utldict.h"
 
 
@@ -901,6 +903,8 @@ void Cmd_Modelname (void)
 	{
 		Q_strncpy( outname, token, sizeof( outname ) );
 	}
+	
+	Q_FixSlashes( outname );
 }
 
 void Cmd_Autocenter()
@@ -2745,10 +2749,10 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			GetToken( false );
 			pseq->paramend[i] = verify_atof( token );
 
-			g_pose[j].min  = min( g_pose[j].min, pseq->paramstart[i] );
-			g_pose[j].min  = min( g_pose[j].min, pseq->paramend[i] );
-			g_pose[j].max  = max( g_pose[j].max, pseq->paramstart[i] );
-			g_pose[j].max  = max( g_pose[j].max, pseq->paramend[i] );
+			g_pose[j].min  = Min( g_pose[j].min, pseq->paramstart[i] );
+			g_pose[j].min  = Min( g_pose[j].min, pseq->paramend[i] );
+			g_pose[j].max  = Max( g_pose[j].max, pseq->paramstart[i] );
+			g_pose[j].max  = Max( g_pose[j].max, pseq->paramend[i] );
 		}
 		else if (stricmp("calcblend", token ) == 0)
 		{

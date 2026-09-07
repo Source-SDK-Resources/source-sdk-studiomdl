@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -624,15 +624,15 @@ struct s_sequence_t
 
 	int				numblends;
 	int				groupsize[2];
-	s_animation_t	*panim[MAXSTUDIOBLENDS][MAXSTUDIOBLENDS];
+	s_animation_t	*panim[32][32];
 
 	int				paramindex[2];
 	float			paramstart[2];
 	float			paramend[2];
 	int				paramattachment[2];
 	int				paramcontrol[2];
-	float			param0[MAXSTUDIOBLENDS]; // [MAXSTUDIOBLENDS];
-	float			param1[MAXSTUDIOBLENDS]; // [MAXSTUDIOBLENDS];
+	float			param0[32];
+	float			param1[32];
 	s_animation_t	*paramanim;
 	s_animation_t	*paramcompanim;
 	s_animation_t	*paramcenter;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,7 +17,7 @@
 #include "studio.h"
 #include "studiomdl.h"
 #include "bone_setup.h"
-#include "vstdlib/strtools.h"
+#include "strtools.h"
 #include "vmatrix.h"
 #include "optimize.h"
 

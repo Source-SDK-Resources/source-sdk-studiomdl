@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,7 +17,7 @@
 extern void MdlError( char const *pMsg, ... );
 
 static CSysModule *g_pStudioRenderModule = NULL;
-static IStudioRender *g_pStudioRender = NULL;
+IStudioRender *g_pStudioRender = NULL;
 static void UpdateStudioRenderConfig( void );
 static StudioRenderConfig_t s_StudioRenderConfig;
 
@@ -81,7 +81,7 @@ void InitStudioRender( void )
 		MdlError( "Unable to init studio render system version %s\n", STUDIO_RENDER_INTERFACE_VERSION );
 	}
 
-	g_pStudioRender->Init( g_MatSysFactory, g_ShaderAPIFactory, g_ShaderAPIFactory, Sys_GetFactoryThis() );
+	g_pStudioRender->Init();
 	UpdateStudioRenderConfig();
 }
 
@@ -89,7 +89,6 @@ static void UpdateStudioRenderConfig( void )
 {
 	memset( &s_StudioRenderConfig, 0, sizeof(s_StudioRenderConfig) );
 
-	s_StudioRenderConfig.eyeGloss = true;
 	s_StudioRenderConfig.bEyeMove = true;
 	s_StudioRenderConfig.fEyeShiftX = 0.0f;
 	s_StudioRenderConfig.fEyeShiftY = 0.0f;
@@ -103,14 +102,11 @@ static void UpdateStudioRenderConfig( void )
 	s_StudioRenderConfig.bFlex = true;
 	s_StudioRenderConfig.bEyes = true;
 	s_StudioRenderConfig.bWireframe = false;
-	s_StudioRenderConfig.SetNormals( false );
 	s_StudioRenderConfig.skin = 0;
 	s_StudioRenderConfig.maxDecalsPerModel = 0;
 	s_StudioRenderConfig.bWireframeDecals = false;
 	s_StudioRenderConfig.fullbright = false;
 	s_StudioRenderConfig.bSoftwareLighting = false;
-	s_StudioRenderConfig.pConDPrintf = Warning;
-	s_StudioRenderConfig.pConPrintf = Warning;
 	s_StudioRenderConfig.bShowEnvCubemapOnly = false;
 	g_pStudioRender->UpdateConfig( s_StudioRenderConfig );
 }
@@ -238,13 +234,12 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		int i;
 		for( i = studioHWData.m_RootLOD; i < studioHWData.m_NumLODs; i++ )
 		{
-			CUtlBuffer statsOutput( 0, 0, true /* text */ );
 			printf( "LOD: %d\n", i );
 			drawModelInfo.m_Lod = i;
-			g_pStudioRender->GetPerfStats( drawModelInfo, &statsOutput );
-			printf( "\tactual tris: %d\n", ( int )drawModelInfo.m_ActualTriCount );
-			printf( "\ttexture memory bytes: %d\n", ( int )drawModelInfo.m_TextureMemoryBytes );
-			printf( ( char * )statsOutput.Base() );
+			DrawModelResults_t statsOutput;
+			g_pStudioRender->GetPerfStats( &statsOutput, drawModelInfo );
+			printf( "\tactual tris: %d\n", ( int )statsOutput.m_ActualTriCount );
+			printf( "\ttexture memory bytes: %d\n", ( int )statsOutput.m_TextureMemoryBytes );
 		}
 		g_pStudioRender->UnloadModel( &studioHWData );
 		free(pVtxHdr);

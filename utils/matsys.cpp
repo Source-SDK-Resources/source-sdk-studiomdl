@@ -1,16 +1,18 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//===== Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //===========================================================================//
 
+#ifdef _WIN32
 #include <windows.h>
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/MaterialSystem_Config.h"
+#endif
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/materialsystem_config.h"
 #include <cmdlib.h>
 #include "tier0/dbg.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "cmdlib.h"
 #include "tier2/tier2.h"
 
@@ -24,12 +26,12 @@ static void LoadMaterialSystem( void )
 	if( g_pMaterialSystem )
 		return;
 	
-	const char *pDllName = "materialsystem.dll";
+	const char *pDllName = "materialsystem" DLL_EXT_STRING;
 	CSysModule *materialSystemDLLHInst;
 	materialSystemDLLHInst = g_pFullFileSystem->LoadModule( pDllName );
 	if( !materialSystemDLLHInst )
 	{
-		MdlError( "Can't load MaterialSystem.dll\n" );
+		MdlError( "Can't load MaterialSystem" DLL_EXT_STRING "\n" );
 	}
 
 	g_MatSysFactory = Sys_GetFactory( materialSystemDLLHInst );
@@ -38,17 +40,17 @@ static void LoadMaterialSystem( void )
 		g_pMaterialSystem = (IMaterialSystem *)g_MatSysFactory( MATERIAL_SYSTEM_INTERFACE_VERSION, NULL );
 		if ( !g_pMaterialSystem )
 		{
-			MdlError( "Could not get the material system interface from materialsystem.dll" );
+			MdlError( "Could not get the material system interface from materialsystem" DLL_EXT_STRING );
 		}
 	}
 	else
 	{
-		MdlError( "Could not find factory interface in library MaterialSystem.dll" );
+		MdlError( "Could not find factory interface in library MaterialSystem" DLL_EXT_STRING );
 	}
 
-	if (!( g_ShaderAPIFactory = g_pMaterialSystem->Init( "shaderapiempty.dll", 0, CmdLib_GetFileSystemFactory() )) )
+	if (!( g_ShaderAPIFactory = g_pMaterialSystem->Init( "shaderapiempty" DLL_EXT_STRING, 0, CmdLib_GetFileSystemFactory() )) )
 	{
-		MdlError( "Could not start the empty shader (shaderapiempty.dll)!" );
+		MdlError( "Could not start the empty shader (shaderapiempty" DLL_EXT_STRING ")!" );
 	}
 }
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,9 @@
 #pragma warning( disable : 4305 )
 
 
+#ifdef _WIN32
 #include <io.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -29,8 +31,8 @@
 #include "collisionmodel.h"
 #include "optimize.h"
 #include "matsys.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialvar.h"
 #include "perfstats.h"
 
 int totalframes = 0;
@@ -704,6 +706,76 @@ int	studiohdr_t::GetAutoplayList( unsigned short **pOut ) const
 	return 0;
 }
 
+const vertexFileHeader_t * mstudiomodel_t::CacheVertexData( void *pModelData )
+{
+	studiohdr_t *pActiveStudioHdr = static_cast<studiohdr_t *>(pModelData);
+	Assert( pActiveStudioHdr );
+
+	if ( pActiveStudioHdr->pVertexBase )
+	{
+		return (vertexFileHeader_t *)pActiveStudioHdr->pVertexBase;
+	}
+
+	// mandatory callback to make requested data resident
+	// load and persist the vertex file
+	char fileName[MAX_PATH];
+	strcpy( fileName, "models/" );	
+	strcat( fileName, pActiveStudioHdr->pszName() );
+	Q_StripExtension( fileName, fileName, sizeof( fileName ) );
+	strcat( fileName, ".vvd" );
+
+	// load the model
+	FileHandle_t fileHandle = g_pFileSystem->Open( fileName, "rb" );
+	if ( !fileHandle )
+	{
+		Error( "Unable to load vertex data \"%s\"\n", fileName );
+	}
+
+	// Get the file size
+	int vvdSize = g_pFileSystem->Size( fileHandle );
+	if ( vvdSize == 0 )
+	{
+		g_pFileSystem->Close( fileHandle );
+		Error( "Bad size for vertex data \"%s\"\n", fileName );
+	}
+
+	vertexFileHeader_t *pVvdHdr = (vertexFileHeader_t *)malloc( vvdSize );
+	g_pFileSystem->Read( pVvdHdr, vvdSize, fileHandle );
+	g_pFileSystem->Close( fileHandle );
+
+	// check header
+	if ( pVvdHdr->id != MODEL_VERTEX_FILE_ID )
+	{
+		Error("Error Vertex File %s id %d should be %d\n", fileName, pVvdHdr->id, MODEL_VERTEX_FILE_ID);
+	}
+	if ( pVvdHdr->version != MODEL_VERTEX_FILE_VERSION )
+	{
+		Error("Error Vertex File %s version %d should be %d\n", fileName, pVvdHdr->version, MODEL_VERTEX_FILE_VERSION);
+	}
+	if ( pVvdHdr->checksum != pActiveStudioHdr->checksum )
+	{
+		Error("Error Vertex File %s checksum %d should be %d\n", fileName, pVvdHdr->checksum, pActiveStudioHdr->checksum);
+	}
+
+	// need to perform mesh relocation fixups
+	// allocate a new copy
+	vertexFileHeader_t *pNewVvdHdr = (vertexFileHeader_t *)malloc( vvdSize );
+	if ( !pNewVvdHdr )
+	{
+		Error( "Error allocating %d bytes for Vertex File '%s'\n", vvdSize, fileName );
+	}
+
+	// load vertexes and run fixups
+	Studio_LoadVertexes( pVvdHdr, pNewVvdHdr, 0, true );
+
+	// discard original
+	free( pVvdHdr );
+	pVvdHdr = pNewVvdHdr;
+
+	pActiveStudioHdr->pVertexBase = (void*)pVvdHdr;
+	return pVvdHdr;
+}
+
 
 int rawanimbytes = 0;
 int animboneframes = 0;
@@ -1224,7 +1296,6 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 
 	// write zero frames
 	int *pZeroframeindex = (int *)pData;
-	phdr->zeroframecacheindex = (byte *)pZeroframeindex - (byte *)phdr;
 	pData += animcount * sizeof( int );
 
 	for (i = 0; i < animcount; i++) 
@@ -1503,7 +1574,6 @@ static void WriteModel( studiohdr_t *phdr )
 		AddToStringTable( pflexcontroller, &pflexcontroller->sztypeindex, g_flexcontroller[j].type );
 		pflexcontroller->min = g_flexcontroller[j].min;
 		pflexcontroller->max = g_flexcontroller[j].max;
-		pflexcontroller->link = -1;
 		pflexcontroller++;
 	}
 
@@ -1695,9 +1765,7 @@ static void WriteModel( studiohdr_t *phdr )
 			peyeball[j].radius			= g_model[i]->eyeball[j].radius;
 			VectorCopy( g_model[i]->eyeball[j].up, peyeball[j].up );
 			VectorCopy( g_model[i]->eyeball[j].forward, peyeball[j].forward );
-			peyeball[j].iris_material	= g_model[i]->eyeball[j].iris_material;
 			peyeball[j].iris_scale		= g_model[i]->eyeball[j].iris_scale;
-			peyeball[j].glint_material	= g_model[i]->eyeball[j].glint_material;
 
 			//peyeball[j].upperflex			= g_model[i]->eyeball[j].upperflex;
 			//peyeball[j].lowerflex			= g_model[i]->eyeball[j].lowerflex;
@@ -2217,7 +2285,7 @@ void WriteModelFiles(void)
 		for( modelID = 0; modelID < pBodyPart->nummodels; modelID++ )
 		{
 			mstudiomodel_t *pModel = pBodyPart->pModel( modelID );
-			const mstudio_modelvertexdata_t *vertData = pModel->GetVertexData();
+			const mstudio_modelvertexdata_t *vertData = pModel->GetVertexData( phdr );
 			int vertID;
 			for( vertID = 0; vertID < pModel->numvertices; vertID++ )
 			{
@@ -2247,51 +2315,6 @@ void WriteModelFiles(void)
 	{
 		SpewPerfStats( phdr, filename );
 	}
-}
-
-const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
-{
-	static vertexFileHeader_t	*pVertexHdr;
-	char						filename[260];
-
-	if (pVertexHdr)
-	{
-		// studiomdl is a single model process, can simply persist data in static
-		goto hasData;
-	}
-
-	// load and persist the vertex file
-	strcpy( filename, gamedir );
-//	if( *g_pPlatformName )
-//	{
-//		strcat( filename, "platform_" );
-//		strcat( filename, g_pPlatformName );
-//		strcat( filename, "/" );	
-//	}
-	strcat( filename, "models/" );	
-	strcat( filename, outname );
-	Q_StripExtension( filename, filename, sizeof( filename ) );
-	strcat( filename, ".vvd" );
-
-	LoadFile(filename, (void**)&pVertexHdr);
-
-	// check id
-	if (pVertexHdr->id != MODEL_VERTEX_FILE_ID)
-	{
-		MdlError("Error Vertex File: '%s' (id %d should be %d)\n", filename, pVertexHdr->id, MODEL_VERTEX_FILE_ID);
-	}
-
-	// check version
-	if (pVertexHdr->version != MODEL_VERTEX_FILE_VERSION)
-	{
-		MdlError("Error Vertex File: '%s' (version %d should be %d)\n", filename, pVertexHdr->version, MODEL_VERTEX_FILE_VERSION);
-	}
-
-hasData:
-	vertexdata.pVertexData  = (byte *)pVertexHdr + pVertexHdr->vertexDataStart;
-	vertexdata.pTangentData = (byte *)pVertexHdr + pVertexHdr->tangentDataStart;
-
-	return &vertexdata;
 }
 
 typedef struct
